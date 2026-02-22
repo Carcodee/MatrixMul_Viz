@@ -169,6 +169,32 @@
         box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32);
       }
 
+      .current-state-panel {
+        position: fixed;
+        left: 12px;
+        top: 128px;
+        width: min(460px, calc(100vw - 24px));
+        max-height: min(38vh, 360px);
+        overflow-y: auto;
+        padding: 9px;
+        border-radius: 12px;
+        border: 1px solid var(--stroke);
+        background: var(--bg-surface-strong);
+        backdrop-filter: blur(8px);
+        font-size: 12px;
+        z-index: 20;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32);
+      }
+
+      .current-state-panel::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .current-state-panel::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
       .math-panel::-webkit-scrollbar {
         width: 8px;
       }
@@ -417,6 +443,10 @@
         background: #66d184;
       }
 
+      .viz-label-point {
+        background: #7dd3fc;
+      }
+
       .world-axis-label {
         position: fixed;
         pointer-events: none;
@@ -442,6 +472,281 @@
 
       .world-axis-z {
         background: #7fb3ff;
+      }
+
+      .state-badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .state-badge {
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+        color: #d9e4f6;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .state-equation {
+        margin: 0 0 8px;
+        color: #c4d2ea;
+        font-size: 12px;
+      }
+
+      .state-translation {
+        margin: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        color: #edf3ff;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .state-matrix {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .state-matrix th,
+      .state-matrix td {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 4px 6px;
+        text-align: center;
+      }
+
+      .state-matrix th {
+        color: #bcd0f3;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .state-matrix td {
+        color: #f3f7ff;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .math-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+
+      .math-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #b9cae7;
+        margin: 0 0 6px;
+      }
+
+      .math-equation {
+        margin: 0 0 6px;
+        color: #eef4ff;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .math-steps {
+        margin: 0;
+        color: #d8e3f7;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .math-anim-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .math-anim-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .math-anim-label {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: #b9cae7;
+      }
+
+      .math-anim-eq {
+        margin: 6px 0 0;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        color: #eef4ff;
+      }
+
+      .math-anim-mats {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .math-anim-mat {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .math-anim-mat-title {
+        margin: 0 0 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #b9cae7;
+      }
+
+      .math-active-row {
+        background: rgba(251, 191, 36, 0.16) !important;
+      }
+
+      .math-active-col {
+        box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.55);
+      }
+
+      .math-active-cell {
+        background: rgba(59, 130, 246, 0.24) !important;
+        box-shadow: inset 0 0 0 1px rgba(125, 180, 255, 0.7);
+      }
+
+      .math-dot-terms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .math-dot-term {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 11px;
+        color: #d8e3f7;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .math-dot-term-active {
+        background: rgba(125, 180, 255, 0.22);
+        border-color: rgba(125, 180, 255, 0.65);
+        color: #eff6ff;
+      }
+
+      .math-dot-term-done {
+        background: rgba(123, 227, 163, 0.16);
+        border-color: rgba(123, 227, 163, 0.55);
+      }
+
+      .math-anim-scrub {
+        margin-top: 8px;
+        display: grid;
+        gap: 4px;
+      }
+
+      .math-anim-scrub input[type="range"] {
+        width: 100%;
+      }
+
+      @media (max-width: 1040px) {
+        .math-anim-mats {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .math-axis-x {
+        color: #ff8d8d !important;
+      }
+
+      .math-axis-y {
+        color: #85e3a3 !important;
+      }
+
+      .math-axis-z {
+        color: #8ebcff !important;
+      }
+
+      .math-axis-t {
+        color: #ffd28b !important;
+      }
+
+      .math-axis-d {
+        color: #ffd28b !important;
+      }
+
+      .point-controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .axis-control {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .axis-control label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .axis-control input {
+        width: 100%;
+        height: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 6px;
+        background: #111722;
+        color: #eef4ff;
+        padding: 4px 6px;
+        box-sizing: border-box;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .axis-control-x {
+        border-left: 3px solid #ef7373;
+      }
+
+      .axis-control-x label {
+        color: #ffb8b8;
+      }
+
+      .axis-control-y {
+        border-left: 3px solid #7cdd99;
+      }
+
+      .axis-control-y label {
+        color: #baf5cb;
+      }
+
+      .axis-control-z {
+        border-left: 3px solid #7fb3ff;
+      }
+
+      .axis-control-z label {
+        color: #c2dbff;
+      }
+
+      .point-controls-actions {
+        margin-top: 8px;
       }
 
       @media (max-width: 920px) {
@@ -475,6 +780,15 @@
           width: auto;
           max-height: 32vh;
         }
+
+        .current-state-panel {
+          left: 8px;
+          right: 8px;
+          top: auto;
+          bottom: calc(8px + 32vh + 8px);
+          width: auto;
+          max-height: 22vh;
+        }
       }
     </style>
   </head>
@@ -486,10 +800,10 @@
       X axis: Red | Y axis: Green | Z axis: Blue<br />
       Orange path: cumulative translation from origin
     </div>
-    <div class="controls">
+      <div class="controls">
       <div class="control-row">
-        <span id="modeLabel">Mode: 3D</span>
-        <button id="modeToggle" type="button">Switch to 2D</button>
+        <span id="modeLabel">Mode: 2D</span>
+        <button id="modeToggle" type="button">Switch to 3D</button>
         <span id="toolModeLabel">Tool: Transform</span>
         <button id="toolModeToggle" type="button">Matrix Viz</button>
       </div>
@@ -497,14 +811,15 @@
         <button class="panel-toggle" type="button" data-panel-target="panelMatrixEditor" data-active="true">Matrix</button>
         <button class="panel-toggle" type="button" data-panel-target="panelMultiply" data-active="true">Multiply</button>
         <button class="panel-toggle" type="button" data-panel-target="panelConfig" data-active="true">Config</button>
-        <button class="panel-toggle" type="button" data-panel-target="panelMathContainer" data-active="true">Math</button>
-        <button class="panel-toggle" type="button" data-panel-target="panelViz" data-active="true">Viz</button>
-        <button class="panel-toggle" type="button" data-panel-target="appliedSection" data-active="true">Chain</button>
+        <button class="panel-toggle" type="button" data-panel-target="panelCurrentContainer" data-active="false">Current</button>
+        <button class="panel-toggle" type="button" data-panel-target="panelMathContainer" data-active="false">Math</button>
+        <button class="panel-toggle" type="button" data-panel-target="appliedSection" data-active="false">Chain</button>
       </div>
     </div>
     <div id="vizLabelOrigin" class="viz-label viz-label-origin hidden">O (0, 0)</div>
     <div id="vizLabelX" class="viz-label viz-label-x hidden">X (1, 0)</div>
     <div id="vizLabelY" class="viz-label viz-label-y hidden">Y (0, 1)</div>
+    <div id="pointWorldLabel" class="viz-label viz-label-point hidden">P (0, 0, 0)</div>
     <div id="worldAxisLabelX" class="world-axis-label world-axis-x hidden">X axis</div>
     <div id="worldAxisLabelY" class="world-axis-label world-axis-y hidden">Y axis</div>
     <div id="worldAxisLabelZ" class="world-axis-label world-axis-z hidden">Z axis</div>
@@ -516,39 +831,6 @@
         </div>
         <div id="matrixColumnLabels" class="matrix-col-labels"></div>
         <div id="matrixGrid" class="matrix-grid"></div>
-      </div>
-
-      <div id="panelConfig" class="panel-section">
-        <h3>Configuration</h3>
-        <div class="matrix-actions">
-          <select id="transformObjectMode">
-            <option value="cube">Object: Cube</option>
-            <option value="point">Object: Point</option>
-          </select>
-          <button id="copyCurrent" type="button">Copy Current</button>
-          <button id="identityTarget" type="button">Identity</button>
-          <button id="resetCube" type="button">Reset Cube</button>
-        </div>
-      </div>
-
-      <div id="panelMultiply" class="panel-section">
-        <h3>Multiplication</h3>
-        <div class="matrix-actions">
-          <button id="applyMatrix" type="button">Apply Multiply</button>
-          <button id="directMultiply" type="button">Direct Multiply</button>
-          <button id="setMatrix" type="button">Apply Set</button>
-          <button id="replayTransformations" type="button">Replay Transformations</button>
-          <button id="doTransformation" type="button">Do Transformation</button>
-        </div>
-        <div id="matrixStatus" class="matrix-status"></div>
-        <div class="operation-output">
-          <h3>Operation Output</h3>
-          <pre id="operationOutput">No operation yet.</pre>
-        </div>
-      </div>
-
-      <div id="panelViz" class="panel-section">
-        <h3>Visualization</h3>
         <div id="vizHint" class="matrix-status hidden">
           Matrix Visualization mode: edit the matrix to preview transformed X/Y axes only.
         </div>
@@ -564,10 +846,16 @@ y_axis = (0, 1)</pre>
         <div class="matrix-status">Trig inputs use degrees: `cos 90`, `sin(45)`, `tan 30`.</div>
       </div>
 
-      <div id="appliedSection" class="applied-list panel-section">
-        <h3>Applied Matrices</h3>
-        <div class="chain-output">
-          <pre id="chainOutput">M_total = I</pre>
+      <div id="panelConfig" class="panel-section">
+        <h3>Configuration</h3>
+        <div class="matrix-actions">
+          <select id="transformObjectMode">
+            <option value="cube">Object: Cube</option>
+            <option value="point">Object: Point</option>
+          </select>
+          <button id="copyCurrent" type="button">Copy Current</button>
+          <button id="identityTarget" type="button">Identity</button>
+          <button id="resetCube" type="button">Reset Cube</button>
         </div>
         <div class="matrix-actions">
           <select id="chainStepSelect">
@@ -577,16 +865,35 @@ y_axis = (0, 1)</pre>
           <button id="chainModeRotate" type="button">Rotate</button>
           <button id="chainModeScale" type="button">Scale</button>
         </div>
+      </div>
+
+      <div id="panelMultiply" class="panel-section">
+        <h3>Multiplication</h3>
+        <div class="matrix-actions">
+          <button id="applyMatrix" type="button">Apply Multiply</button>
+          <button id="directMultiply" type="button">Direct Multiply</button>
+          <button id="setMatrix" type="button">Apply Set</button>
+          <button id="replayTransformations" type="button">Replay Transformations</button>
+          <button id="doTransformation" type="button">Do Transformation</button>
+        </div>
+        <div id="matrixStatus" class="matrix-status"></div>
+      </div>
+
+      <div id="appliedSection" class="applied-list panel-section hidden">
+        <h3>Applied Matrices</h3>
         <div id="appliedMatrixList" class="applied-empty">No matrices applied yet.</div>
       </div>
     </div>
-    <div id="panelMathContainer" class="math-panel">
+    <div id="panelMathContainer" class="math-panel hidden">
       <div id="panelMath" class="panel-section">
         <h3>Math Visualizer</h3>
-        <div class="operation-output">
-          <h3>Matrix Equations</h3>
-          <pre id="mathFormOutput">No math equation yet.</pre>
-        </div>
+        <div id="mathFormOutput"></div>
+      </div>
+    </div>
+    <div id="panelCurrentContainer" class="current-state-panel hidden">
+      <div id="panelCurrent" class="panel-section">
+        <h3>Current Object State</h3>
+        <div id="currentStateContent"></div>
       </div>
     </div>
 
@@ -602,6 +909,7 @@ y_axis = (0, 1)</pre>
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
       import { TransformControls } from "three/addons/controls/TransformControls.js";
+      import { renderCurrentStatePanel } from "./object-state-panel.js";
 
       const container = document.getElementById("app");
 
@@ -634,9 +942,9 @@ y_axis = (0, 1)</pre>
       renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
-      let activeCamera = camera3D;
+      let activeCamera = camera2D;
       let controls;
-      let is2D = false;
+      let is2D = true;
 
       function createControls(camera, mode2D) {
         if (controls) controls.dispose();
@@ -664,7 +972,7 @@ y_axis = (0, 1)</pre>
           chainControl = null;
         }
         chainControl = new TransformControls(camera, renderer.domElement);
-        chainControl.setMode(chainControlMode);
+        chainControl.setMode(chainControlMode === "none" ? "translate" : chainControlMode);
         chainControl.setSize(0.7);
         chainControl.addEventListener("dragging-changed", (event) => {
           controls.enabled = !event.value;
@@ -704,6 +1012,11 @@ y_axis = (0, 1)</pre>
 
       function syncChainControlAttachment() {
         if (!chainControl) return;
+        if (chainControlMode === "none") {
+          chainControl.detach();
+          chainControl.visible = false;
+          return;
+        }
         chainControl.setMode(chainControlMode);
         if (toolMode !== "transform" || selectedAppliedStepIndex < 0 || selectedAppliedStepIndex >= appliedMatrices.length) {
           chainControl.detach();
@@ -791,6 +1104,27 @@ y_axis = (0, 1)</pre>
       scene.add(translationVizGroup);
       const matrixVizGroup = new THREE.Group();
       scene.add(matrixVizGroup);
+      const pointWorldVizGroup = new THREE.Group();
+      scene.add(pointWorldVizGroup);
+
+      const pointWorldPath = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+        new THREE.LineBasicMaterial({ color: 0x7dd3fc })
+      );
+      pointWorldVizGroup.add(pointWorldPath);
+
+      const pointWorldProjection = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+        new THREE.LineDashedMaterial({ color: 0x7dd3fc, dashSize: 0.25, gapSize: 0.18, transparent: true, opacity: 0.8 })
+      );
+      pointWorldVizGroup.add(pointWorldProjection);
+
+      const pointWorldProjectedDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 10, 10),
+        new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.8 })
+      );
+      pointWorldVizGroup.add(pointWorldProjectedDot);
+      pointWorldVizGroup.visible = false;
 
       const modeLabel = document.getElementById("modeLabel");
       const modeToggle = document.getElementById("modeToggle");
@@ -811,6 +1145,7 @@ y_axis = (0, 1)</pre>
       const matrixStatus = document.getElementById("matrixStatus");
       const operationOutput = document.getElementById("operationOutput");
       const mathFormOutput = document.getElementById("mathFormOutput");
+      const currentStateContent = document.getElementById("currentStateContent");
       const vizHint = document.getElementById("vizHint");
       const vizAxisReadout = document.getElementById("vizAxisReadout");
       const vizTrigToggle = document.getElementById("vizTrigToggle");
@@ -818,11 +1153,11 @@ y_axis = (0, 1)</pre>
       const vizLabelOrigin = document.getElementById("vizLabelOrigin");
       const vizLabelX = document.getElementById("vizLabelX");
       const vizLabelY = document.getElementById("vizLabelY");
+      const pointWorldLabel = document.getElementById("pointWorldLabel");
       const worldAxisLabelX = document.getElementById("worldAxisLabelX");
       const worldAxisLabelY = document.getElementById("worldAxisLabelY");
       const worldAxisLabelZ = document.getElementById("worldAxisLabelZ");
       const appliedSection = document.getElementById("appliedSection");
-      const chainOutput = document.getElementById("chainOutput");
       const chainStepSelect = document.getElementById("chainStepSelect");
       const chainModeTranslate = document.getElementById("chainModeTranslate");
       const chainModeRotate = document.getElementById("chainModeRotate");
@@ -847,18 +1182,22 @@ y_axis = (0, 1)</pre>
       let transformEntityMode = "cube";
       let transformEditorMatrix = null;
       let vizEditorMatrix = null;
-      let transformViewIs2D = false;
+      let transformViewIs2D = true;
       let matrixVizHandles = { origin: null, x: null, y: null };
       let vizTrigMode = false;
       let chainControl = null;
       const chainControlProxy = new THREE.Object3D();
       scene.add(chainControlProxy);
       let selectedAppliedStepIndex = -1;
-      let chainControlMode = "translate";
+      let chainControlMode = "none";
       const raycaster = new THREE.Raycaster();
       const pointerNdc = new THREE.Vector2();
       const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
       let dragState = null;
+      let mathMulAnimation = null;
+      let mathMulManualStep = 0;
+      let mathMulManualSize = 4;
+      let mathMulLastRenderedStep = -1;
       const INTERP_DURATION_MS = 1200;
 
       function setPanelVisible(panelId, show) {
@@ -1008,6 +1347,7 @@ y_axis = (0, 1)</pre>
         const obj = getActiveTransformObject();
         obj.matrix.copy(nextMatrix);
         obj.matrixWorldNeedsUpdate = true;
+        updateCurrentStatePanel();
         updateMathVisualizer();
       }
 
@@ -1040,6 +1380,50 @@ y_axis = (0, 1)</pre>
         return toRowMajorText(getRowMajorFromMatrix(matrix4));
       }
 
+      function updateCurrentStatePanel() {
+        if (!currentStateContent) return;
+        const entityLabel = getActiveTransformLabel();
+        const currentMatrix = getActiveTransformMatrix();
+        const translation = new THREE.Vector3().setFromMatrixPosition(currentMatrix);
+        currentStateContent.innerHTML = renderCurrentStatePanel({
+          entityLabel,
+          translation: { x: translation.x, y: translation.y, z: translation.z },
+          rowMajor: getRowMajorFromMatrix(currentMatrix),
+          formatValue
+        });
+
+        if (entityLabel === "point") {
+          const txInput = currentStateContent.querySelector('[data-point-translate="x"]');
+          const tyInput = currentStateContent.querySelector('[data-point-translate="y"]');
+          const tzInput = currentStateContent.querySelector('[data-point-translate="z"]');
+          const applyBtn = currentStateContent.querySelector('[data-action="apply-point-translation"]');
+          if (!txInput || !tyInput || !tzInput || !applyBtn) return;
+
+          const applyPointTranslation = () => {
+            const tx = Number(txInput.value);
+            const ty = Number(tyInput.value);
+            const tz = Number(tzInput.value);
+            if (!Number.isFinite(tx) || !Number.isFinite(ty) || !Number.isFinite(tz)) {
+              matrixStatus.textContent = "Point translation must be numeric.";
+              return;
+            }
+            const next = getActiveTransformMatrix();
+            next.setPosition(tx, ty, tz);
+            setActiveTransformMatrix(next);
+            setInputsFromMatrix(next);
+            transformEditorMatrix = next.clone();
+            matrixStatus.textContent = "Point translation updated.";
+          };
+
+          applyBtn.addEventListener("click", applyPointTranslation);
+          [txInput, tyInput, tzInput].forEach((input) => {
+            input.addEventListener("keydown", (event) => {
+              if (event.key === "Enter") applyPointTranslation();
+            });
+          });
+        }
+      }
+
       function matrixToEquationText(matrix4) {
         const rowMajor = getRowMajorFromMatrix(matrix4);
         const lines = [];
@@ -1052,56 +1436,281 @@ y_axis = (0, 1)</pre>
         return lines.join("\n");
       }
 
+      function toRowMajor3FromMatrix4(matrixOrRowMajor) {
+        const rowMajor4 = Array.isArray(matrixOrRowMajor)
+          ? matrixOrRowMajor
+          : getRowMajorFromMatrix(matrixOrRowMajor);
+        return [
+          rowMajor4[0], rowMajor4[1], rowMajor4[3],
+          rowMajor4[4], rowMajor4[5], rowMajor4[7],
+          rowMajor4[12], rowMajor4[13], rowMajor4[15]
+        ];
+      }
+
+      function multiplyRowMajor(leftRowMajor, rightRowMajor, size) {
+        const out = new Array(size * size).fill(0);
+        for (let r = 0; r < size; r += 1) {
+          for (let c = 0; c < size; c += 1) {
+            let sum = 0;
+            for (let k = 0; k < size; k += 1) {
+              sum += leftRowMajor[r * size + k] * rightRowMajor[k * size + c];
+            }
+            out[r * size + c] = sum;
+          }
+        }
+        return out;
+      }
+
+      function matrixToHtmlTable(matrixOrRowMajor, options = {}) {
+        const size = options.size === 3 ? 3 : 4;
+        const rowMajor = Array.isArray(matrixOrRowMajor)
+          ? matrixOrRowMajor
+          : size === 3
+            ? toRowMajor3FromMatrix4(matrixOrRowMajor)
+            : getRowMajorFromMatrix(matrixOrRowMajor);
+        const activeRow = Number.isInteger(options.activeRow) ? options.activeRow : -1;
+        const activeCol = Number.isInteger(options.activeCol) ? options.activeCol : -1;
+        const activeCellRow = Number.isInteger(options.activeCellRow) ? options.activeCellRow : -1;
+        const activeCellCol = Number.isInteger(options.activeCellCol) ? options.activeCellCol : -1;
+        const rows = [];
+        for (let row = 0; row < size; row += 1) {
+          const base = row * size;
+          const rowClass = row === activeRow ? " math-active-row" : "";
+          if (size === 3) {
+            rows.push(
+              `<tr>
+                <th class="${rowClass.trim()}">r${row + 1}</th>
+                <td class="math-axis-x${rowClass}${activeCol === 0 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 0 ? " math-active-cell" : ""}">${formatValue(rowMajor[base])}</td>
+                <td class="math-axis-y${rowClass}${activeCol === 1 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 1 ? " math-active-cell" : ""}">${formatValue(rowMajor[base + 1])}</td>
+                <td class="math-axis-d${rowClass}${activeCol === 2 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 2 ? " math-active-cell" : ""}">${formatValue(rowMajor[base + 2])}</td>
+              </tr>`
+            );
+          } else {
+            rows.push(
+              `<tr>
+                <th class="${rowClass.trim()}">r${row + 1}</th>
+                <td class="math-axis-x${rowClass}${activeCol === 0 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 0 ? " math-active-cell" : ""}">${formatValue(rowMajor[base])}</td>
+                <td class="math-axis-y${rowClass}${activeCol === 1 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 1 ? " math-active-cell" : ""}">${formatValue(rowMajor[base + 1])}</td>
+                <td class="math-axis-z${rowClass}${activeCol === 2 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 2 ? " math-active-cell" : ""}">${formatValue(rowMajor[base + 2])}</td>
+                <td class="math-axis-t${rowClass}${activeCol === 3 ? " math-active-col" : ""}${activeCellRow === row && activeCellCol === 3 ? " math-active-cell" : ""}">${formatValue(rowMajor[base + 3])}</td>
+              </tr>`
+            );
+          }
+        }
+        return `
+          <table class="state-matrix">
+            <thead>
+              ${size === 3
+                ? '<tr><th></th><th class="math-axis-x">X</th><th class="math-axis-y">Y</th><th class="math-axis-d">D</th></tr>'
+                : '<tr><th></th><th class="math-axis-x">X</th><th class="math-axis-y">Y</th><th class="math-axis-z">Z</th><th class="math-axis-t">T</th></tr>'
+              }
+            </thead>
+            <tbody>${rows.join("")}</tbody>
+          </table>
+        `;
+      }
+
+      function getMathMulTotalSteps(size) {
+        return size * size * size;
+      }
+
+      function getMathMulFrameFromStep(stepIndex, size) {
+        const totalSteps = getMathMulTotalSteps(size);
+        const clamped = Math.max(0, Math.min(totalSteps - 1, Number(stepIndex) || 0));
+        const cellIndex = Math.floor(clamped / size);
+        const row = Math.floor(cellIndex / size);
+        const col = cellIndex % size;
+        const term = clamped % size;
+        return {
+          done: clamped >= totalSteps - 1,
+          stepIndex: clamped,
+          row,
+          col,
+          term
+        };
+      }
+
+      function getMathMulAnimationFrame() {
+        if (!mathMulAnimation) return null;
+        const stepDuration = mathMulAnimation.cellDurationMs / mathMulAnimation.size;
+        const totalSteps = getMathMulTotalSteps(mathMulAnimation.size);
+        const elapsed = performance.now() - mathMulAnimation.startTime;
+        const stepIndex = Math.floor(elapsed / stepDuration);
+        if (stepIndex >= totalSteps) {
+          return getMathMulFrameFromStep(totalSteps - 1, mathMulAnimation.size);
+        }
+        return getMathMulFrameFromStep(stepIndex, mathMulAnimation.size);
+      }
+
+      function startMathMulAnimation(leftMatrix, rightMatrix, size, startStep = 0) {
+        const clampedStart = Math.max(0, Math.min(getMathMulTotalSteps(size) - 1, Number(startStep) || 0));
+        const stepDuration = 520 / size;
+        mathMulAnimation = {
+          startTime: performance.now() - clampedStart * stepDuration,
+          cellDurationMs: 520,
+          size,
+          leftRowMajor: size === 3 ? toRowMajor3FromMatrix4(leftMatrix) : getRowMajorFromMatrix(leftMatrix),
+          rightRowMajor: size === 3 ? toRowMajor3FromMatrix4(rightMatrix) : getRowMajorFromMatrix(rightMatrix)
+        };
+        mathMulManualSize = size;
+        mathMulLastRenderedStep = -1;
+      }
+
+      function stopMathMulAnimation() {
+        mathMulAnimation = null;
+        mathMulLastRenderedStep = -1;
+      }
+
+      function renderMathMulAnimationCard(leftRowMajor, rightRowMajor, size) {
+        const isPlaying = Boolean(mathMulAnimation);
+        const frame = isPlaying ? getMathMulAnimationFrame() : getMathMulFrameFromStep(mathMulManualStep, size);
+        const totalSteps = getMathMulTotalSteps(size);
+        const resultRowMajor = multiplyRowMajor(leftRowMajor, rightRowMajor, size);
+        const activeRow = frame ? frame.row : -1;
+        const activeCol = frame ? frame.col : -1;
+        const activeTerm = frame ? frame.term : -1;
+        let details = '<p class="math-anim-eq">Press "Animate Multiplication" to show row-by-column calculation.</p>';
+
+        if (frame) {
+          const terms = [];
+          let partial = 0;
+          for (let k = 0; k < size; k += 1) {
+            const a = leftRowMajor[activeRow * size + k];
+            const b = rightRowMajor[k * size + activeCol];
+            const mul = a * b;
+            if (k <= activeTerm) partial += mul;
+            const cls = k < activeTerm
+              ? "math-dot-term math-dot-term-done"
+              : k === activeTerm
+                ? "math-dot-term math-dot-term-active"
+                : "math-dot-term";
+            terms.push(`<span class="${cls}">${formatValue(a)} * ${formatValue(b)} = ${formatValue(mul)}</span>`);
+          }
+          details = `
+            <p class="math-anim-eq">r${activeRow + 1}, c${activeCol + 1}: partial = ${formatValue(partial)} | final = ${formatValue(resultRowMajor[activeRow * size + activeCol])}</p>
+            <div class="math-dot-terms">${terms.join("")}</div>
+          `;
+        }
+
+        return `
+          <div class="math-card">
+            <div class="math-anim-head">
+              <p class="math-anim-label">Matrix Multiplication Animation</p>
+              <button type="button" data-action="toggle-math-mul-animation">${isPlaying ? "Stop Animation" : "Play Animation"}</button>
+            </div>
+            ${details}
+            <div class="math-anim-scrub">
+              <label class="math-anim-label" for="mathMulStepRange">Step ${frame.stepIndex + 1} / ${totalSteps}</label>
+              <input id="mathMulStepRange" type="range" min="0" max="${totalSteps - 1}" step="1" value="${frame.stepIndex}" data-action="math-mul-slider" />
+            </div>
+            <div class="math-anim-grid">
+              <div class="math-anim-mats">
+                <div class="math-anim-mat">
+                  <p class="math-anim-mat-title">Left Matrix (rows)</p>
+                  ${matrixToHtmlTable(leftRowMajor, { activeRow, size })}
+                </div>
+                <div class="math-anim-mat">
+                  <p class="math-anim-mat-title">Right Matrix (columns)</p>
+                  ${matrixToHtmlTable(rightRowMajor, { activeCol, size })}
+                </div>
+                <div class="math-anim-mat">
+                  <p class="math-anim-mat-title">Result Matrix</p>
+                  ${matrixToHtmlTable(resultRowMajor, {
+                    size,
+                    activeCellRow: activeRow,
+                    activeCellCol: activeCol
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       function updateMathVisualizer() {
         if (!mathFormOutput) return;
+        const mathSize = is2D ? 3 : 4;
+        if (mathMulManualSize !== mathSize) {
+          mathMulManualSize = mathSize;
+          mathMulManualStep = 0;
+        }
         const entityLabel = getActiveTransformLabel();
         const currentMatrix = getActiveTransformMatrix();
         const editorMatrix = tryReadMatrixFromInputs();
-        const lines = [];
+        let html = "";
 
-        lines.push(`${entityLabel}_current =`);
-        lines.push(matrixToEquationText(currentMatrix));
-        lines.push("");
+        html += `
+          <div class="math-card">
+            <p class="math-label">${entityLabel}_current</p>
+            ${matrixToHtmlTable(currentMatrix, { size: mathSize })}
+          </div>
+        `;
 
         if (editorMatrix) {
-          lines.push("M_editor =");
-          lines.push(matrixToEquationText(editorMatrix));
-          lines.push("");
-
           const nextMatrix = currentMatrix.clone().multiply(editorMatrix);
-          lines.push(`${entityLabel}_next = ${entityLabel}_current * M_editor`);
-          lines.push(matrixToEquationText(nextMatrix));
-          lines.push("");
+          if (mathMulAnimation && mathMulAnimation.size !== mathSize) {
+            stopMathMulAnimation();
+          }
+          const leftRowMajor = mathMulAnimation
+            ? mathMulAnimation.leftRowMajor
+            : (mathSize === 3 ? toRowMajor3FromMatrix4(currentMatrix) : getRowMajorFromMatrix(currentMatrix));
+          const rightRowMajor = mathMulAnimation
+            ? mathMulAnimation.rightRowMajor
+            : (mathSize === 3 ? toRowMajor3FromMatrix4(editorMatrix) : getRowMajorFromMatrix(editorMatrix));
+          html += `
+            <div class="math-card">
+              <p class="math-label">M_editor</p>
+              ${matrixToHtmlTable(editorMatrix, { size: mathSize })}
+            </div>
+            <div class="math-card">
+              <p class="math-equation">${entityLabel}_next = ${entityLabel}_current * M_editor</p>
+              ${matrixToHtmlTable(nextMatrix, { size: mathSize })}
+            </div>
+            ${renderMathMulAnimationCard(leftRowMajor, rightRowMajor, mathSize)}
+          `;
         } else {
-          lines.push("M_editor = [invalid input]");
-          lines.push("");
+          stopMathMulAnimation();
+          html += `
+            <div class="math-card">
+              <p class="math-label">M_editor</p>
+              <p class="math-equation">Invalid matrix input.</p>
+            </div>
+          `;
         }
 
         if (appliedMatrices.length === 0) {
-          lines.push("M_total = I");
+          html += `
+            <div class="math-card">
+              <p class="math-equation">M_total = I</p>
+            </div>
+          `;
         } else {
           const chainTerms = appliedMatrices.map((entry) => `M${entry.id}`);
-          lines.push(`M_total = I * ${chainTerms.join(" * ")}`);
+          const steps = [];
           for (let i = 0; i < appliedMatrices.length; i += 1) {
-            const entry = appliedMatrices[i];
             const prev = i === 0 ? "I" : `S${i}`;
             const next = `S${i + 1}`;
-            lines.push(`${next} = ${prev} * M${entry.id}`);
+            steps.push(`${next} = ${prev} * M${appliedMatrices[i].id}`);
           }
-          lines.push("");
           const chainMatrix = new THREE.Matrix4();
           chainMatrix.identity();
           for (const entry of appliedMatrices) {
             chainMatrix.multiply(matrixFromRowMajor(entry.rowMajor));
           }
-          lines.push("M_total =");
-          lines.push(matrixToEquationText(chainMatrix));
+          html += `
+            <div class="math-card">
+              <p class="math-equation">M_total = I * ${chainTerms.join(" * ")}</p>
+              <pre class="math-steps">${steps.join("\n")}</pre>
+              ${matrixToHtmlTable(chainMatrix, { size: mathSize })}
+            </div>
+          `;
         }
 
-        mathFormOutput.textContent = lines.join("\n");
+        mathFormOutput.innerHTML = html;
       }
 
       function showOperationOutput(lines) {
+        if (!operationOutput) return;
         operationOutput.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines || "");
       }
 
@@ -1224,6 +1833,29 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         vizLabelY.classList.add("hidden");
       }
 
+      function updatePointWorldViz() {
+        if (toolMode !== "transform" || transformEntityMode !== "point") {
+          pointWorldVizGroup.visible = false;
+          pointWorldLabel.classList.add("hidden");
+          return;
+        }
+        const pointPos = new THREE.Vector3().setFromMatrixPosition(point.matrix);
+        const origin = new THREE.Vector3(0, 0, 0);
+        const projected = new THREE.Vector3(pointPos.x, pointPos.y, 0);
+
+        pointWorldPath.geometry.setFromPoints([origin, pointPos]);
+        pointWorldProjection.geometry.setFromPoints([pointPos, projected]);
+        pointWorldProjection.computeLineDistances();
+        pointWorldProjectedDot.position.copy(projected);
+        pointWorldVizGroup.visible = true;
+
+        setVizLabel(
+          pointWorldLabel,
+          `P (${formatValue(pointPos.x)}, ${formatValue(pointPos.y)}, ${formatValue(pointPos.z)})`,
+          pointPos
+        );
+      }
+
       function updateVizHandleLabels() {
         if (toolMode !== "viz") {
           hideVizLabels();
@@ -1317,20 +1949,41 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         origin.position.set(0, 0, 0);
         translationVizGroup.add(origin);
 
-        const data = getAppliedMatrixDisplayData();
-        if (data.length === 0) return;
+        const steps = getAppliedChainData();
+        if (steps.length === 0) return;
 
-        const points = [new THREE.Vector3(0, 0, 0), ...data.map((d) => d.cumulativeTranslation.clone())];
+        const points = [new THREE.Vector3(0, 0, 0)];
 
-        for (let i = 1; i < points.length; i += 1) {
-          const isSelected = selectedAppliedStepIndex === i - 1;
-          const marker = new THREE.Mesh(
-            new THREE.SphereGeometry(isSelected ? 0.18 : 0.14, 12, 12),
-            new THREE.MeshBasicMaterial({ color: isSelected ? 0xffd166 : 0xffa84d })
-          );
-          marker.position.copy(points[i]);
-          marker.userData.stepIndex = i - 1;
+        for (let i = 0; i < steps.length; i += 1) {
+          const isSelected = selectedAppliedStepIndex === i;
+          const pos = new THREE.Vector3();
+          const quat = new THREE.Quaternion();
+          const scl = new THREE.Vector3();
+          steps[i].cumulative.decompose(pos, quat, scl);
+          points.push(pos.clone());
+
+          const marker = new THREE.Group();
+          marker.position.copy(pos);
+          marker.quaternion.copy(quat);
+          marker.userData.stepIndex = i;
           marker.userData.kind = "chain-point";
+
+          const axis = new THREE.AxesHelper(isSelected ? 0.85 : 0.65);
+          marker.add(axis);
+
+          const hitTarget = new THREE.Mesh(
+            new THREE.SphereGeometry(isSelected ? 0.18 : 0.16, 12, 12),
+            new THREE.MeshBasicMaterial({
+              color: isSelected ? 0xffd166 : 0xffffff,
+              transparent: true,
+              opacity: isSelected ? 0.35 : 0.05,
+              depthWrite: false
+            })
+          );
+          hitTarget.userData.stepIndex = i;
+          hitTarget.userData.kind = "chain-point";
+          marker.add(hitTarget);
+
           translationVizGroup.add(marker);
         }
 
@@ -1366,7 +2019,6 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
       function renderAppliedMatrices() {
         const displayData = getAppliedMatrixDisplayData();
         if (appliedMatrices.length === 0) {
-          chainOutput.textContent = "M_total = I";
           appliedMatrixList.className = "applied-empty";
           appliedMatrixList.textContent = "No matrices applied yet.";
           renderTranslationViz();
@@ -1376,22 +2028,12 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
           return;
         }
 
-        const ids = appliedMatrices.map((entry) => `M${entry.id}`);
-        const chain = `M_total = I * ${ids.join(" * ")}`;
-        const stepLines = appliedMatrices.map((entry, idx) => {
-          const prev = idx === 0 ? "I" : `S${idx}`;
-          const next = `S${idx + 1}`;
-          return `${next} = ${prev} * M${entry.id}`;
-        });
-        chainOutput.textContent = [chain, "", ...stepLines].join("\n");
-
         appliedMatrixList.className = "";
         appliedMatrixList.innerHTML = displayData
           .map(
-            (entry, idx) => `
+            (entry) => `
               <details class="applied-item">
                 <summary>M${entry.id} (multiply)</summary>
-                <pre>S${idx + 1} = ${idx === 0 ? "I" : `S${idx}`} * M${entry.id}</pre>
                 <pre>local T: ${formatVec3(entry.localTranslation)}
 cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
                 <button type="button" data-load-matrix="${entry.id}">Load to Editor</button>
@@ -1607,9 +2249,13 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
           if (stepMarkers.length > 0) {
             getPointerNdcFromEvent(event);
             raycaster.setFromCamera(pointerNdc, activeCamera);
-            const stepHits = raycaster.intersectObjects(stepMarkers, false);
+            const stepHits = raycaster.intersectObjects(stepMarkers, true);
             if (stepHits.length > 0) {
-              const hitStep = stepHits[0].object.userData.stepIndex;
+              let hitObj = stepHits[0].object;
+              while (hitObj && (!hitObj.userData || !Number.isInteger(hitObj.userData.stepIndex))) {
+                hitObj = hitObj.parent;
+              }
+              const hitStep = hitObj && hitObj.userData ? hitObj.userData.stepIndex : null;
               if (Number.isInteger(hitStep)) {
                 selectedAppliedStepIndex = hitStep;
                 chainStepSelect.value = String(hitStep);
@@ -1660,11 +2306,15 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
 
       transformEditorMatrix = createIdentityMatrix();
       vizEditorMatrix = createIdentityMatrix();
+      gridXY.visible = true;
+      gridXZ.visible = !is2D;
+      gridYZ.visible = !is2D;
       createControls(activeCamera, is2D);
-      rebuildMatrixEditor("3d", transformEditorMatrix);
+      rebuildMatrixEditor("2d", transformEditorMatrix);
       syncChainControlModeButtons();
       resetCube.textContent = "Reset Cube";
       syncTransformEntityVisibility();
+      updateCurrentStatePanel();
       renderAppliedMatrices();
       initPanelToggles();
 
@@ -2016,6 +2666,7 @@ return (${expr});`
         transformEditorMatrix = current.clone();
         resetCube.textContent = transformEntityMode === "point" ? "Reset Point" : "Reset Cube";
         matrixStatus.textContent = `Transform object set to ${getActiveTransformLabel()}.`;
+        updateCurrentStatePanel();
         syncChainControlAttachment();
       });
 
@@ -2026,17 +2677,17 @@ return (${expr});`
       });
 
       chainModeTranslate.addEventListener("click", () => {
-        chainControlMode = "translate";
+        chainControlMode = chainControlMode === "translate" ? "none" : "translate";
         syncChainControlModeButtons();
         syncChainControlAttachment();
       });
       chainModeRotate.addEventListener("click", () => {
-        chainControlMode = "rotate";
+        chainControlMode = chainControlMode === "rotate" ? "none" : "rotate";
         syncChainControlModeButtons();
         syncChainControlAttachment();
       });
       chainModeScale.addEventListener("click", () => {
-        chainControlMode = "scale";
+        chainControlMode = chainControlMode === "scale" ? "none" : "scale";
         syncChainControlModeButtons();
         syncChainControlAttachment();
       });
@@ -2055,6 +2706,47 @@ return (${expr});`
           }
           renderMatrixVizFromCurrentEditor();
         }
+      });
+
+      mathFormOutput.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (target.getAttribute("data-action") !== "toggle-math-mul-animation") return;
+        if (mathMulAnimation) {
+          const frame = getMathMulAnimationFrame();
+          if (frame) mathMulManualStep = frame.stepIndex;
+          stopMathMulAnimation();
+          updateMathVisualizer();
+          return;
+        }
+        const editorMatrix = tryReadMatrixFromInputs();
+        if (!editorMatrix) {
+          matrixStatus.textContent = "Cannot animate: invalid matrix input.";
+          return;
+        }
+        startMathMulAnimation(getActiveTransformMatrix(), editorMatrix, is2D ? 3 : 4, mathMulManualStep);
+        updateMathVisualizer();
+      });
+
+      mathFormOutput.addEventListener("input", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.getAttribute("data-action") !== "math-mul-slider") return;
+        const nextStep = Number(target.value);
+        if (!Number.isFinite(nextStep)) return;
+        mathMulManualStep = Math.max(0, Math.floor(nextStep));
+        stopMathMulAnimation();
+      });
+
+      mathFormOutput.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.getAttribute("data-action") !== "math-mul-slider") return;
+        const nextStep = Number(target.value);
+        if (!Number.isFinite(nextStep)) return;
+        mathMulManualStep = Math.max(0, Math.floor(nextStep));
+        stopMathMulAnimation();
+        updateMathVisualizer();
       });
 
       renderer.domElement.addEventListener("pointerdown", onVizPointerDown);
@@ -2076,6 +2768,7 @@ return (${expr});`
         renderer.setSize(window.innerWidth, window.innerHeight);
         updateVizHandleLabels();
         updateWorldAxisLabels();
+        updatePointWorldViz();
       }
       window.addEventListener("resize", onResize);
 
@@ -2099,9 +2792,23 @@ return (${expr});`
             completeInterpolationNow();
           }
         }
+        if (mathMulAnimation) {
+          const frame = getMathMulAnimationFrame();
+          if (frame) {
+            mathMulManualStep = frame.stepIndex;
+            if (frame.done) {
+              stopMathMulAnimation();
+              updateMathVisualizer();
+            } else if (frame.stepIndex !== mathMulLastRenderedStep) {
+              mathMulLastRenderedStep = frame.stepIndex;
+              updateMathVisualizer();
+            }
+          }
+        }
         controls.update();
         updateVizHandleLabels();
         updateWorldAxisLabels();
+        updatePointWorldViz();
         renderer.render(scene, activeCamera);
         requestAnimationFrame(animate);
       }
@@ -2110,3 +2817,4 @@ return (${expr});`
     </script>
   </body>
 </html>
+
