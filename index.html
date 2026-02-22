@@ -5,14 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Matrix Multiplication Demo Visualization</title>
     <style>
+      :root {
+        --bg-main: #0e1116;
+        --bg-main-2: #151a22;
+        --bg-surface: rgba(22, 27, 36, 0.9);
+        --bg-surface-strong: rgba(18, 23, 31, 0.96);
+        --bg-input: #141a23;
+        --text-main: #f3f5f8;
+        --text-soft: #b4bdca;
+        --stroke: rgba(255, 255, 255, 0.12);
+        --accent: #cdd8eb;
+        --radius: 10px;
+      }
+
       html,
       body {
         margin: 0;
         height: 100%;
         overflow: hidden;
-        background: #0b1020;
-        color: #e8ecf3;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background:
+          radial-gradient(circle at 14% 12%, #232b39 0%, rgba(35, 43, 57, 0) 34%),
+          linear-gradient(130deg, var(--bg-main) 0%, var(--bg-main-2) 100%);
+        color: var(--text-main);
+        font-family: "Segoe UI", "Aptos", Tahoma, Geneva, Verdana, sans-serif;
       }
 
       #app {
@@ -24,37 +39,96 @@
         position: fixed;
         top: 12px;
         left: 12px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.4);
-        font-size: 13px;
+        z-index: 20;
+        max-width: 420px;
+        padding: 10px 11px;
+        border-radius: var(--radius);
+        border: 1px solid var(--stroke);
+        background: var(--bg-surface);
+        backdrop-filter: blur(6px);
+        font-size: 12px;
         line-height: 1.4;
+        color: var(--text-soft);
       }
 
       .controls {
         position: fixed;
         top: 12px;
         right: 12px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.4);
+        z-index: 20;
+        padding: 9px;
+        border-radius: var(--radius);
+        border: 1px solid var(--stroke);
+        background: var(--bg-surface);
+        backdrop-filter: blur(6px);
         display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+
+      .control-row {
+        display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         align-items: center;
       }
 
-      .controls button {
-        background: #f3f6fc;
-        color: #111827;
-        border: none;
-        border-radius: 6px;
+      .panel-toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        max-width: 360px;
+      }
+
+      button {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-main);
+        border: 1px solid var(--stroke);
+        border-radius: 8px;
         padding: 6px 10px;
         cursor: pointer;
         font-weight: 600;
+        transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+      }
+
+      button:hover {
+        border-color: rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      button:focus-visible,
+      .matrix-grid input:focus-visible,
+      .matrix-actions input:focus-visible,
+      .matrix-actions select:focus-visible {
+        outline: 2px solid rgba(220, 233, 255, 0.55);
+        outline-offset: 1px;
       }
 
       .controls span {
         font-size: 13px;
+        color: var(--text-soft);
+      }
+
+      .panel-toggle {
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 11px;
+        letter-spacing: 0.01em;
+      }
+
+      .panel-toggle[data-active="true"] {
+        background: rgba(220, 233, 255, 0.2);
+        border-color: rgba(220, 233, 255, 0.45);
+      }
+
+      .panel-toggle[data-active="false"] {
+        background: rgba(12, 16, 23, 0.85);
+        color: #94a2ba;
+        border-color: rgba(255, 255, 255, 0.08);
       }
 
       .hidden {
@@ -65,17 +139,80 @@
         position: fixed;
         right: 12px;
         bottom: 12px;
-        width: 380px;
-        padding: 10px;
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.45);
+        width: min(420px, calc(100vw - 24px));
+        max-height: calc(100vh - 170px);
+        overflow-y: auto;
+        padding: 9px;
+        border-radius: 12px;
+        border: 1px solid var(--stroke);
+        background: var(--bg-surface-strong);
+        backdrop-filter: blur(8px);
         font-size: 12px;
+        z-index: 20;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32);
+      }
+
+      .math-panel {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        width: min(460px, calc(100vw - 24px));
+        max-height: min(46vh, 420px);
+        overflow-y: auto;
+        padding: 9px;
+        border-radius: 12px;
+        border: 1px solid var(--stroke);
+        background: var(--bg-surface-strong);
+        backdrop-filter: blur(8px);
+        font-size: 12px;
+        z-index: 20;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32);
+      }
+
+      .math-panel::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .math-panel::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .matrix-panel::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .matrix-panel::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .panel-section {
+        margin-bottom: 8px;
+        padding: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.03);
       }
 
       .matrix-panel h3 {
         margin: 0 0 8px;
         font-size: 13px;
         font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-subtitle {
+        font-size: 11px;
+        color: var(--text-soft);
+        margin: 0;
       }
 
       .matrix-grid {
@@ -103,10 +240,10 @@
       .matrix-grid input {
         width: 100%;
         height: 30px;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        background: #111827;
-        color: #e8ecf3;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 7px;
+        background: var(--bg-input);
+        color: #eef4ff;
         padding: 4px 6px;
         box-sizing: border-box;
         font-family: Consolas, "Courier New", monospace;
@@ -114,23 +251,23 @@
       }
 
       .col-x {
-        border-color: #ef4444 !important;
-        background: rgba(239, 68, 68, 0.12) !important;
+        border-color: rgba(253, 138, 138, 0.9) !important;
+        background: rgba(201, 77, 77, 0.22) !important;
       }
 
       .col-y {
-        border-color: #22c55e !important;
-        background: rgba(34, 197, 94, 0.12) !important;
+        border-color: rgba(117, 214, 150, 0.92) !important;
+        background: rgba(51, 150, 80, 0.24) !important;
       }
 
       .col-z {
-        border-color: #3b82f6 !important;
-        background: rgba(59, 130, 246, 0.12) !important;
+        border-color: rgba(125, 176, 255, 0.95) !important;
+        background: rgba(49, 96, 178, 0.24) !important;
       }
 
       .col-t {
-        border-color: #f59e0b !important;
-        background: rgba(245, 158, 11, 0.12) !important;
+        border-color: rgba(241, 194, 109, 0.95) !important;
+        background: rgba(168, 123, 49, 0.25) !important;
       }
 
       .label-x {
@@ -156,37 +293,27 @@
         gap: 8px;
       }
 
-      .matrix-actions button {
-        background: #f3f6fc;
-        color: #111827;
-        border: none;
-        border-radius: 6px;
-        padding: 6px 10px;
-        cursor: pointer;
-        font-weight: 600;
-      }
-
       .matrix-actions input,
       .matrix-actions select {
         height: 30px;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        background: #111827;
-        color: #e8ecf3;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 7px;
+        background: var(--bg-input);
+        color: #ebf0fb;
         padding: 4px 6px;
       }
 
       .matrix-status {
         margin-top: 8px;
         min-height: 16px;
-        color: #bcd0ff;
+        color: #c4cfdf;
       }
 
       .operation-output {
         margin-top: 8px;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        background: rgba(17, 24, 39, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 7px;
+        background: rgba(0, 0, 0, 0.14);
       }
 
       .operation-output h3 {
@@ -201,14 +328,12 @@
         padding: 0 8px 8px;
         white-space: pre-wrap;
         font-size: 11px;
-        color: #d8e2f2;
+        color: #d6deeb;
         font-family: Consolas, "Courier New", monospace;
       }
 
       .applied-list {
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid #334155;
+        margin: 0;
       }
 
       .applied-list h3 {
@@ -219,9 +344,9 @@
 
       .chain-output {
         margin-bottom: 8px;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        background: rgba(17, 24, 39, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 7px;
+        background: rgba(0, 0, 0, 0.14);
       }
 
       .chain-output pre {
@@ -229,19 +354,19 @@
         padding: 8px;
         white-space: pre-wrap;
         font-size: 11px;
-        color: #d8e2f2;
+        color: #d6deeb;
         font-family: Consolas, "Courier New", monospace;
       }
 
       .applied-empty {
-        color: #93a3bb;
+        color: #9aa8be;
       }
 
       .applied-item {
         margin-bottom: 6px;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        background: rgba(17, 24, 39, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 7px;
+        background: rgba(0, 0, 0, 0.12);
       }
 
       .applied-item summary {
@@ -261,14 +386,9 @@
 
       .applied-item button {
         margin: 0 8px 8px;
-        background: #f3f6fc;
-        color: #111827;
-        border: none;
-        border-radius: 6px;
-        padding: 5px 8px;
-        cursor: pointer;
+        border-radius: 7px;
+        padding: 5px 9px;
         font-size: 11px;
-        font-weight: 600;
       }
 
       .viz-label {
@@ -296,6 +416,66 @@
       .viz-label-y {
         background: #66d184;
       }
+
+      .world-axis-label {
+        position: fixed;
+        pointer-events: none;
+        transform: translate(-50%, -120%);
+        padding: 2px 7px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-family: Consolas, "Courier New", monospace;
+        color: #0b1020;
+        font-weight: 700;
+        z-index: 20;
+        white-space: nowrap;
+        border: 1px solid rgba(0, 0, 0, 0.35);
+      }
+
+      .world-axis-x {
+        background: #ff7777;
+      }
+
+      .world-axis-y {
+        background: #7be39a;
+      }
+
+      .world-axis-z {
+        background: #7fb3ff;
+      }
+
+      @media (max-width: 920px) {
+        .hud {
+          top: 8px;
+          left: 8px;
+          font-size: 12px;
+          max-width: calc(100vw - 16px);
+        }
+
+        .controls {
+          top: auto;
+          bottom: 8px;
+          right: 8px;
+          max-width: calc(100vw - 16px);
+          padding: 8px;
+        }
+
+        .matrix-panel {
+          left: 8px;
+          right: 8px;
+          bottom: 96px;
+          width: auto;
+          max-height: calc(100vh - 210px);
+        }
+
+        .math-panel {
+          left: 8px;
+          right: 8px;
+          bottom: 8px;
+          width: auto;
+          max-height: 32vh;
+        }
+      }
     </style>
   </head>
   <body>
@@ -307,53 +487,84 @@
       Orange path: cumulative translation from origin
     </div>
     <div class="controls">
-      <span id="modeLabel">Mode: 3D</span>
-      <button id="modeToggle" type="button">Switch to 2D</button>
-      <span id="toolModeLabel">Tool: Transform</span>
-      <button id="toolModeToggle" type="button">Matrix Viz</button>
+      <div class="control-row">
+        <span id="modeLabel">Mode: 3D</span>
+        <button id="modeToggle" type="button">Switch to 2D</button>
+        <span id="toolModeLabel">Tool: Transform</span>
+        <button id="toolModeToggle" type="button">Matrix Viz</button>
+      </div>
+      <div class="panel-toggle-row" aria-label="Panel visibility">
+        <button class="panel-toggle" type="button" data-panel-target="panelMatrixEditor" data-active="true">Matrix</button>
+        <button class="panel-toggle" type="button" data-panel-target="panelMultiply" data-active="true">Multiply</button>
+        <button class="panel-toggle" type="button" data-panel-target="panelConfig" data-active="true">Config</button>
+        <button class="panel-toggle" type="button" data-panel-target="panelMathContainer" data-active="true">Math</button>
+        <button class="panel-toggle" type="button" data-panel-target="panelViz" data-active="true">Viz</button>
+        <button class="panel-toggle" type="button" data-panel-target="appliedSection" data-active="true">Chain</button>
+      </div>
     </div>
     <div id="vizLabelOrigin" class="viz-label viz-label-origin hidden">O (0, 0)</div>
     <div id="vizLabelX" class="viz-label viz-label-x hidden">X (1, 0)</div>
     <div id="vizLabelY" class="viz-label viz-label-y hidden">Y (0, 1)</div>
+    <div id="worldAxisLabelX" class="world-axis-label world-axis-x hidden">X axis</div>
+    <div id="worldAxisLabelY" class="world-axis-label world-axis-y hidden">Y axis</div>
+    <div id="worldAxisLabelZ" class="world-axis-label world-axis-z hidden">Z axis</div>
     <div class="matrix-panel">
-      <h3 id="matrixTitle">Cube Matrix (4x4)</h3>
-      <div id="matrixColumnLabels" class="matrix-col-labels"></div>
-      <div id="matrixGrid" class="matrix-grid"></div>
-      <div class="matrix-actions">
-        <select id="transformObjectMode">
-          <option value="cube">Object: Cube</option>
-          <option value="point">Object: Point</option>
-        </select>
-        <button id="copyCurrent" type="button">Copy Current</button>
-        <button id="identityTarget" type="button">Identity</button>
-        <button id="applyMatrix" type="button">Apply Multiply</button>
-        <button id="directMultiply" type="button">Direct Multiply</button>
-        <button id="setMatrix" type="button">Apply Set</button>
-        <button id="resetCube" type="button">Reset Cube</button>
-      </div>
-      <div class="matrix-actions">
-        <button id="replayTransformations" type="button">Replay Transformations</button>
-        <button id="doTransformation" type="button">Do Transformation</button>
-      </div>
-      <div id="matrixStatus" class="matrix-status"></div>
-      <div class="operation-output">
-        <h3>Operation Output</h3>
-        <pre id="operationOutput">No operation yet.</pre>
-      </div>
-      <div id="vizHint" class="matrix-status hidden">
-        Matrix Visualization mode: edit the matrix to preview transformed X/Y axes only.
-      </div>
-      <div id="vizAxisReadout" class="operation-output hidden">
-        <h3>Viz Axis Values</h3>
-        <div class="matrix-actions">
-          <button id="vizTrigToggle" type="button">Trig View: Off</button>
+      <div id="panelMatrixEditor" class="panel-section">
+        <div class="panel-header">
+          <h3 id="matrixTitle">Cube Matrix (4x4)</h3>
+          <p class="panel-subtitle">Editor</p>
         </div>
-        <pre id="vizAxisText">origin = (0, 0)
+        <div id="matrixColumnLabels" class="matrix-col-labels"></div>
+        <div id="matrixGrid" class="matrix-grid"></div>
+      </div>
+
+      <div id="panelConfig" class="panel-section">
+        <h3>Configuration</h3>
+        <div class="matrix-actions">
+          <select id="transformObjectMode">
+            <option value="cube">Object: Cube</option>
+            <option value="point">Object: Point</option>
+          </select>
+          <button id="copyCurrent" type="button">Copy Current</button>
+          <button id="identityTarget" type="button">Identity</button>
+          <button id="resetCube" type="button">Reset Cube</button>
+        </div>
+      </div>
+
+      <div id="panelMultiply" class="panel-section">
+        <h3>Multiplication</h3>
+        <div class="matrix-actions">
+          <button id="applyMatrix" type="button">Apply Multiply</button>
+          <button id="directMultiply" type="button">Direct Multiply</button>
+          <button id="setMatrix" type="button">Apply Set</button>
+          <button id="replayTransformations" type="button">Replay Transformations</button>
+          <button id="doTransformation" type="button">Do Transformation</button>
+        </div>
+        <div id="matrixStatus" class="matrix-status"></div>
+        <div class="operation-output">
+          <h3>Operation Output</h3>
+          <pre id="operationOutput">No operation yet.</pre>
+        </div>
+      </div>
+
+      <div id="panelViz" class="panel-section">
+        <h3>Visualization</h3>
+        <div id="vizHint" class="matrix-status hidden">
+          Matrix Visualization mode: edit the matrix to preview transformed X/Y axes only.
+        </div>
+        <div id="vizAxisReadout" class="operation-output hidden">
+          <h3>Viz Axis Values</h3>
+          <div class="matrix-actions">
+            <button id="vizTrigToggle" type="button">Trig View: Off</button>
+          </div>
+          <pre id="vizAxisText">origin = (0, 0)
 x_axis = (1, 0)
 y_axis = (0, 1)</pre>
+        </div>
+        <div class="matrix-status">Trig inputs use degrees: `cos 90`, `sin(45)`, `tan 30`.</div>
       </div>
-      <div class="matrix-status">Trig inputs use degrees: `cos 90`, `sin(45)`, `tan 30`.</div>
-      <div id="appliedSection" class="applied-list">
+
+      <div id="appliedSection" class="applied-list panel-section">
         <h3>Applied Matrices</h3>
         <div class="chain-output">
           <pre id="chainOutput">M_total = I</pre>
@@ -367,6 +578,15 @@ y_axis = (0, 1)</pre>
           <button id="chainModeScale" type="button">Scale</button>
         </div>
         <div id="appliedMatrixList" class="applied-empty">No matrices applied yet.</div>
+      </div>
+    </div>
+    <div id="panelMathContainer" class="math-panel">
+      <div id="panelMath" class="panel-section">
+        <h3>Math Visualizer</h3>
+        <div class="operation-output">
+          <h3>Matrix Equations</h3>
+          <pre id="mathFormOutput">No math equation yet.</pre>
+        </div>
       </div>
     </div>
 
@@ -386,7 +606,7 @@ y_axis = (0, 1)</pre>
       const container = document.getElementById("app");
 
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0b1020);
+      scene.background = new THREE.Color(0x10151d);
 
       const camera3D = new THREE.PerspectiveCamera(
         60,
@@ -470,10 +690,10 @@ y_axis = (0, 1)</pre>
       }
 
       function syncChainControlModeButtons() {
-        const activeBg = "#93c5fd";
-        const inactiveBg = "#f3f6fc";
-        const activeColor = "#0b1020";
-        const inactiveColor = "#111827";
+        const activeBg = "rgba(220, 233, 255, 0.22)";
+        const inactiveBg = "rgba(255, 255, 255, 0.06)";
+        const activeColor = "#f3f5f8";
+        const inactiveColor = "#f3f5f8";
         chainModeTranslate.style.background = chainControlMode === "translate" ? activeBg : inactiveBg;
         chainModeRotate.style.background = chainControlMode === "rotate" ? activeBg : inactiveBg;
         chainModeScale.style.background = chainControlMode === "scale" ? activeBg : inactiveBg;
@@ -590,6 +810,7 @@ y_axis = (0, 1)</pre>
       const doTransformation = document.getElementById("doTransformation");
       const matrixStatus = document.getElementById("matrixStatus");
       const operationOutput = document.getElementById("operationOutput");
+      const mathFormOutput = document.getElementById("mathFormOutput");
       const vizHint = document.getElementById("vizHint");
       const vizAxisReadout = document.getElementById("vizAxisReadout");
       const vizTrigToggle = document.getElementById("vizTrigToggle");
@@ -597,6 +818,9 @@ y_axis = (0, 1)</pre>
       const vizLabelOrigin = document.getElementById("vizLabelOrigin");
       const vizLabelX = document.getElementById("vizLabelX");
       const vizLabelY = document.getElementById("vizLabelY");
+      const worldAxisLabelX = document.getElementById("worldAxisLabelX");
+      const worldAxisLabelY = document.getElementById("worldAxisLabelY");
+      const worldAxisLabelZ = document.getElementById("worldAxisLabelZ");
       const appliedSection = document.getElementById("appliedSection");
       const chainOutput = document.getElementById("chainOutput");
       const chainStepSelect = document.getElementById("chainStepSelect");
@@ -604,6 +828,7 @@ y_axis = (0, 1)</pre>
       const chainModeRotate = document.getElementById("chainModeRotate");
       const chainModeScale = document.getElementById("chainModeScale");
       const appliedMatrixList = document.getElementById("appliedMatrixList");
+      const panelToggleButtons = Array.from(document.querySelectorAll(".panel-toggle"));
       const transformControls = [
         transformObjectMode,
         copyCurrent,
@@ -635,6 +860,32 @@ y_axis = (0, 1)</pre>
       const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
       let dragState = null;
       const INTERP_DURATION_MS = 1200;
+
+      function setPanelVisible(panelId, show) {
+        const panel = document.getElementById(panelId);
+        if (!panel) return;
+        panel.classList.toggle("hidden", !show);
+        panelToggleButtons.forEach((button) => {
+          if (button.getAttribute("data-panel-target") !== panelId) return;
+          button.setAttribute("data-active", show ? "true" : "false");
+          button.setAttribute("aria-pressed", show ? "true" : "false");
+        });
+      }
+
+      function initPanelToggles() {
+        panelToggleButtons.forEach((button) => {
+          const panelId = button.getAttribute("data-panel-target");
+          if (!panelId) return;
+          const panel = document.getElementById(panelId);
+          if (!panel) return;
+          button.setAttribute("aria-pressed", panel.classList.contains("hidden") ? "false" : "true");
+          button.setAttribute("data-active", panel.classList.contains("hidden") ? "false" : "true");
+          button.addEventListener("click", () => {
+            const isVisible = !panel.classList.contains("hidden");
+            setPanelVisible(panelId, !isVisible);
+          });
+        });
+      }
 
       function createIdentityMatrix() {
         const m = new THREE.Matrix4();
@@ -720,6 +971,7 @@ y_axis = (0, 1)</pre>
             matrixInputs[6].value = "0";
             matrixInputs[7].value = "0";
             matrixInputs[8].value = "1";
+            updateMathVisualizer();
             return;
           }
 
@@ -731,11 +983,13 @@ y_axis = (0, 1)</pre>
           for (let i = 0; i < 9; i += 1) {
             matrixInputs[i].value = String(rowMajor3[i]);
           }
+          updateMathVisualizer();
           return;
         }
         for (let i = 0; i < 16; i += 1) {
           matrixInputs[i].value = String(rowMajor4[i]);
         }
+        updateMathVisualizer();
       }
 
       function getActiveTransformObject() {
@@ -754,6 +1008,7 @@ y_axis = (0, 1)</pre>
         const obj = getActiveTransformObject();
         obj.matrix.copy(nextMatrix);
         obj.matrixWorldNeedsUpdate = true;
+        updateMathVisualizer();
       }
 
       function syncTransformEntityVisibility() {
@@ -783,6 +1038,67 @@ y_axis = (0, 1)</pre>
 
       function matrixToText(matrix4) {
         return toRowMajorText(getRowMajorFromMatrix(matrix4));
+      }
+
+      function matrixToEquationText(matrix4) {
+        const rowMajor = getRowMajorFromMatrix(matrix4);
+        const lines = [];
+        for (let row = 0; row < 4; row += 1) {
+          const base = row * 4;
+          lines.push(
+            `| ${formatValue(rowMajor[base])} ${formatValue(rowMajor[base + 1])} ${formatValue(rowMajor[base + 2])} ${formatValue(rowMajor[base + 3])} |`
+          );
+        }
+        return lines.join("\n");
+      }
+
+      function updateMathVisualizer() {
+        if (!mathFormOutput) return;
+        const entityLabel = getActiveTransformLabel();
+        const currentMatrix = getActiveTransformMatrix();
+        const editorMatrix = tryReadMatrixFromInputs();
+        const lines = [];
+
+        lines.push(`${entityLabel}_current =`);
+        lines.push(matrixToEquationText(currentMatrix));
+        lines.push("");
+
+        if (editorMatrix) {
+          lines.push("M_editor =");
+          lines.push(matrixToEquationText(editorMatrix));
+          lines.push("");
+
+          const nextMatrix = currentMatrix.clone().multiply(editorMatrix);
+          lines.push(`${entityLabel}_next = ${entityLabel}_current * M_editor`);
+          lines.push(matrixToEquationText(nextMatrix));
+          lines.push("");
+        } else {
+          lines.push("M_editor = [invalid input]");
+          lines.push("");
+        }
+
+        if (appliedMatrices.length === 0) {
+          lines.push("M_total = I");
+        } else {
+          const chainTerms = appliedMatrices.map((entry) => `M${entry.id}`);
+          lines.push(`M_total = I * ${chainTerms.join(" * ")}`);
+          for (let i = 0; i < appliedMatrices.length; i += 1) {
+            const entry = appliedMatrices[i];
+            const prev = i === 0 ? "I" : `S${i}`;
+            const next = `S${i + 1}`;
+            lines.push(`${next} = ${prev} * M${entry.id}`);
+          }
+          lines.push("");
+          const chainMatrix = new THREE.Matrix4();
+          chainMatrix.identity();
+          for (const entry of appliedMatrices) {
+            chainMatrix.multiply(matrixFromRowMajor(entry.rowMajor));
+          }
+          lines.push("M_total =");
+          lines.push(matrixToEquationText(chainMatrix));
+        }
+
+        mathFormOutput.textContent = lines.join("\n");
       }
 
       function showOperationOutput(lines) {
@@ -880,6 +1196,26 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         el.style.left = `${x}px`;
         el.style.top = `${y}px`;
         el.classList.remove("hidden");
+      }
+
+      function hideWorldAxisLabels() {
+        worldAxisLabelX.classList.add("hidden");
+        worldAxisLabelY.classList.add("hidden");
+        worldAxisLabelZ.classList.add("hidden");
+      }
+
+      function updateWorldAxisLabels() {
+        if (toolMode !== "transform") {
+          hideWorldAxisLabels();
+          return;
+        }
+        setVizLabel(worldAxisLabelX, "X axis", new THREE.Vector3(4.4, 0, 0));
+        setVizLabel(worldAxisLabelY, "Y axis", new THREE.Vector3(0, 4.4, 0));
+        if (is2D) {
+          worldAxisLabelZ.classList.add("hidden");
+        } else {
+          setVizLabel(worldAxisLabelZ, "Z axis", new THREE.Vector3(0, 0, 4.4));
+        }
       }
 
       function hideVizLabels() {
@@ -1036,6 +1372,7 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
           renderTranslationViz();
           refreshChainStepSelect();
           syncChainControlAttachment();
+          updateMathVisualizer();
           return;
         }
 
@@ -1066,6 +1403,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
         renderTranslationViz();
         refreshChainStepSelect();
         syncChainControlAttachment();
+        updateMathVisualizer();
       }
 
       function addAppliedMatrix(rowMajor) {
@@ -1220,8 +1558,10 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
       function onMatrixEditorInputChanged() {
         if (toolMode === "viz") {
           renderMatrixVizFromCurrentEditor();
+          updateMathVisualizer();
           return;
         }
+        updateMathVisualizer();
       }
 
       function getPointerNdcFromEvent(event) {
@@ -1326,6 +1666,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
       resetCube.textContent = "Reset Cube";
       syncTransformEntityVisibility();
       renderAppliedMatrices();
+      initPanelToggles();
 
       function readMatrixFromInputs() {
         const nums = matrixInputs.map((input) => evaluateCellExpression(input.value));
@@ -1734,6 +2075,7 @@ return (${expr});`
 
         renderer.setSize(window.innerWidth, window.innerHeight);
         updateVizHandleLabels();
+        updateWorldAxisLabels();
       }
       window.addEventListener("resize", onResize);
 
@@ -1759,6 +2101,7 @@ return (${expr});`
         }
         controls.update();
         updateVizHandleLabels();
+        updateWorldAxisLabels();
         renderer.render(scene, activeCamera);
         requestAnimationFrame(animate);
       }
