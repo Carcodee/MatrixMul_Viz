@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix Multiplication Demo Visualization</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0b1020;
+        color: #e8ecf3;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+
+      .hud {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.4);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .controls {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .controls button {
+        background: #f3f6fc;
+        color: #111827;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .controls span {
+        font-size: 13px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .matrix-panel {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        width: 380px;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.45);
+        font-size: 12px;
+      }
+
+      .matrix-panel h3 {
+        margin: 0 0 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .matrix-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .matrix-col-labels {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+
+      .matrix-col-label {
+        text-align: center;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 4px;
+        padding: 3px 0;
+        color: #0b1020;
+      }
+
+      .matrix-grid input {
+        width: 100%;
+        height: 30px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: #111827;
+        color: #e8ecf3;
+        padding: 4px 6px;
+        box-sizing: border-box;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .col-x {
+        border-color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.12) !important;
+      }
+
+      .col-y {
+        border-color: #22c55e !important;
+        background: rgba(34, 197, 94, 0.12) !important;
+      }
+
+      .col-z {
+        border-color: #3b82f6 !important;
+        background: rgba(59, 130, 246, 0.12) !important;
+      }
+
+      .col-t {
+        border-color: #f59e0b !important;
+        background: rgba(245, 158, 11, 0.12) !important;
+      }
+
+      .label-x {
+        background: #ef4444;
+      }
+
+      .label-y {
+        background: #22c55e;
+      }
+
+      .label-z {
+        background: #3b82f6;
+      }
+
+      .label-t {
+        background: #f59e0b;
+      }
+
+      .matrix-actions {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .matrix-actions button {
+        background: #f3f6fc;
+        color: #111827;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .matrix-actions input,
+      .matrix-actions select {
+        height: 30px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: #111827;
+        color: #e8ecf3;
+        padding: 4px 6px;
+      }
+
+      .matrix-status {
+        margin-top: 8px;
+        min-height: 16px;
+        color: #bcd0ff;
+      }
+
+      .operation-output {
+        margin-top: 8px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: rgba(17, 24, 39, 0.65);
+      }
+
+      .operation-output h3 {
+        margin: 0;
+        padding: 6px 8px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .operation-output pre {
+        margin: 0;
+        padding: 0 8px 8px;
+        white-space: pre-wrap;
+        font-size: 11px;
+        color: #d8e2f2;
+        font-family: Consolas, "Courier New", monospace;
+      }
+
+      .applied-list {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #334155;
+      }
+
+      .applied-list h3 {
+        margin: 0 0 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .chain-output {
+        margin-bottom: 8px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: rgba(17, 24, 39, 0.65);
+      }
+
+      .chain-output pre {
+        margin: 0;
+        padding: 8px;
+        white-space: pre-wrap;
+        font-size: 11px;
+        color: #d8e2f2;
+        font-family: Consolas, "Courier New", monospace;
+      }
+
+      .applied-empty {
+        color: #93a3bb;
+      }
+
+      .applied-item {
+        margin-bottom: 6px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: rgba(17, 24, 39, 0.65);
+      }
+
+      .applied-item summary {
+        cursor: pointer;
+        padding: 6px 8px;
+        font-weight: 600;
+      }
+
+      .applied-item pre {
+        margin: 0;
+        padding: 0 8px 8px;
+        white-space: pre-wrap;
+        font-size: 11px;
+        color: #d8e2f2;
+        font-family: Consolas, "Courier New", monospace;
+      }
+
+      .applied-item button {
+        margin: 0 8px 8px;
+        background: #f3f6fc;
+        color: #111827;
+        border: none;
+        border-radius: 6px;
+        padding: 5px 8px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .viz-label {
+        position: fixed;
+        pointer-events: none;
+        transform: translate(-50%, -120%);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-family: Consolas, "Courier New", monospace;
+        color: #0b1020;
+        font-weight: 700;
+        z-index: 20;
+        white-space: nowrap;
+      }
+
+      .viz-label-origin {
+        background: #ffffff;
+      }
+
+      .viz-label-x {
+        background: #ff6b6b;
+      }
+
+      .viz-label-y {
+        background: #66d184;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div class="hud">
+      Matrix Multiplication Demo Visualization<br />
+      Made by Carlos Matecki<br />
+      X axis: Red | Y axis: Green | Z axis: Blue<br />
+      Orange path: cumulative translation from origin
+    </div>
+    <div class="controls">
+      <span id="modeLabel">Mode: 3D</span>
+      <button id="modeToggle" type="button">Switch to 2D</button>
+      <span id="toolModeLabel">Tool: Transform</span>
+      <button id="toolModeToggle" type="button">Matrix Viz</button>
+    </div>
+    <div id="vizLabelOrigin" class="viz-label viz-label-origin hidden">O (0, 0)</div>
+    <div id="vizLabelX" class="viz-label viz-label-x hidden">X (1, 0)</div>
+    <div id="vizLabelY" class="viz-label viz-label-y hidden">Y (0, 1)</div>
+    <div class="matrix-panel">
+      <h3 id="matrixTitle">Cube Matrix (4x4)</h3>
+      <div id="matrixColumnLabels" class="matrix-col-labels"></div>
+      <div id="matrixGrid" class="matrix-grid"></div>
+      <div class="matrix-actions">
+        <select id="transformObjectMode">
+          <option value="cube">Object: Cube</option>
+          <option value="point">Object: Point</option>
+        </select>
+        <button id="copyCurrent" type="button">Copy Current</button>
+        <button id="identityTarget" type="button">Identity</button>
+        <button id="applyMatrix" type="button">Apply Multiply</button>
+        <button id="directMultiply" type="button">Direct Multiply</button>
+        <button id="setMatrix" type="button">Apply Set</button>
+        <button id="resetCube" type="button">Reset Cube</button>
+      </div>
+      <div class="matrix-actions">
+        <button id="replayTransformations" type="button">Replay Transformations</button>
+        <button id="doTransformation" type="button">Do Transformation</button>
+      </div>
+      <div id="matrixStatus" class="matrix-status"></div>
+      <div class="operation-output">
+        <h3>Operation Output</h3>
+        <pre id="operationOutput">No operation yet.</pre>
+      </div>
+      <div id="vizHint" class="matrix-status hidden">
+        Matrix Visualization mode: edit the matrix to preview transformed X/Y axes only.
+      </div>
+      <div id="vizAxisReadout" class="operation-output hidden">
+        <h3>Viz Axis Values</h3>
+        <div class="matrix-actions">
+          <button id="vizTrigToggle" type="button">Trig View: Off</button>
+        </div>
+        <pre id="vizAxisText">origin = (0, 0)
+x_axis = (1, 0)
+y_axis = (0, 1)</pre>
+      </div>
+      <div class="matrix-status">Trig inputs use degrees: `cos 90`, `sin(45)`, `tan 30`.</div>
+      <div id="appliedSection" class="applied-list">
+        <h3>Applied Matrices</h3>
+        <div class="chain-output">
+          <pre id="chainOutput">M_total = I</pre>
+        </div>
+        <div class="matrix-actions">
+          <select id="chainStepSelect">
+            <option value="">Edit Step: None</option>
+          </select>
+          <button id="chainModeTranslate" type="button">Translate</button>
+          <button id="chainModeRotate" type="button">Rotate</button>
+          <button id="chainModeScale" type="button">Scale</button>
+        </div>
+        <div id="appliedMatrixList" class="applied-empty">No matrices applied yet.</div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { TransformControls } from "three/addons/controls/TransformControls.js";
+
+      const container = document.getElementById("app");
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b1020);
+
+      const camera3D = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera3D.position.set(12, 10, 12);
+
+      const frustumSize = 28;
+      const aspect = window.innerWidth / window.innerHeight;
+      const camera2D = new THREE.OrthographicCamera(
+        (-frustumSize * aspect) / 2,
+        (frustumSize * aspect) / 2,
+        frustumSize / 2,
+        -frustumSize / 2,
+        0.1,
+        1000
+      );
+      camera2D.position.set(0, 0, 24);
+      camera2D.lookAt(0, 0, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      let activeCamera = camera3D;
+      let controls;
+      let is2D = false;
+
+      function createControls(camera, mode2D) {
+        if (controls) controls.dispose();
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 0, 0);
+        controls.enableDamping = true;
+        controls.enableRotate = !mode2D;
+        controls.enablePan = true;
+        controls.screenSpacePanning = true;
+        if (mode2D) {
+          controls.minPolarAngle = Math.PI / 2;
+          controls.maxPolarAngle = Math.PI / 2;
+        } else {
+          controls.minPolarAngle = 0;
+          controls.maxPolarAngle = Math.PI;
+        }
+        controls.update();
+        createOrRefreshChainControl(camera);
+      }
+
+      function createOrRefreshChainControl(camera) {
+        if (chainControl) {
+          scene.remove(chainControl);
+          chainControl.dispose();
+          chainControl = null;
+        }
+        chainControl = new TransformControls(camera, renderer.domElement);
+        chainControl.setMode(chainControlMode);
+        chainControl.setSize(0.7);
+        chainControl.addEventListener("dragging-changed", (event) => {
+          controls.enabled = !event.value;
+        });
+        chainControl.addEventListener("objectChange", () => {
+          if (toolMode !== "transform" || selectedAppliedStepIndex < 0) return;
+          const steps = getAppliedChainData();
+          const step = steps[selectedAppliedStepIndex];
+          if (!step) return;
+
+          chainControlProxy.updateMatrix();
+          const cumulativeNew = chainControlProxy.matrix.clone();
+          const prefixInv = step.prefix.clone();
+          if (Math.abs(prefixInv.determinant()) < 1e-8) return;
+          prefixInv.invert();
+          const localNew = prefixInv.multiply(cumulativeNew);
+          appliedMatrices[selectedAppliedStepIndex].rowMajor = getRowMajorFromMatrix(localNew);
+          recomputeFinalFromAppliedChain();
+          renderAppliedMatrices();
+        });
+        scene.add(chainControl);
+        syncChainControlAttachment();
+      }
+
+      function syncChainControlModeButtons() {
+        const activeBg = "#93c5fd";
+        const inactiveBg = "#f3f6fc";
+        const activeColor = "#0b1020";
+        const inactiveColor = "#111827";
+        chainModeTranslate.style.background = chainControlMode === "translate" ? activeBg : inactiveBg;
+        chainModeRotate.style.background = chainControlMode === "rotate" ? activeBg : inactiveBg;
+        chainModeScale.style.background = chainControlMode === "scale" ? activeBg : inactiveBg;
+        chainModeTranslate.style.color = chainControlMode === "translate" ? activeColor : inactiveColor;
+        chainModeRotate.style.color = chainControlMode === "rotate" ? activeColor : inactiveColor;
+        chainModeScale.style.color = chainControlMode === "scale" ? activeColor : inactiveColor;
+      }
+
+      function syncChainControlAttachment() {
+        if (!chainControl) return;
+        chainControl.setMode(chainControlMode);
+        if (toolMode !== "transform" || selectedAppliedStepIndex < 0 || selectedAppliedStepIndex >= appliedMatrices.length) {
+          chainControl.detach();
+          chainControl.visible = false;
+          return;
+        }
+        const steps = getAppliedChainData();
+        const step = steps[selectedAppliedStepIndex];
+        if (!step) {
+          chainControl.detach();
+          chainControl.visible = false;
+          return;
+        }
+        const pos = new THREE.Vector3();
+        const quat = new THREE.Quaternion();
+        const scl = new THREE.Vector3();
+        step.cumulative.decompose(pos, quat, scl);
+        chainControlProxy.position.copy(pos);
+        chainControlProxy.quaternion.copy(quat);
+        chainControlProxy.scale.copy(scl);
+        chainControlProxy.updateMatrix();
+        chainControl.attach(chainControlProxy);
+        chainControl.visible = true;
+      }
+
+      scene.add(new THREE.AxesHelper(8));
+
+      const size = 24;
+      const divisions = 24;
+      function styleGrid(grid, opacity) {
+        const mats = Array.isArray(grid.material) ? grid.material : [grid.material];
+        for (const mat of mats) {
+          mat.transparent = true;
+          mat.opacity = opacity;
+        }
+      }
+
+      const gridXZ = new THREE.GridHelper(size, divisions, 0xffffff, 0x7f8ea3);
+      gridXZ.position.set(0, 0, 0);
+      styleGrid(gridXZ, 0.3);
+      scene.add(gridXZ);
+
+      const gridXY = new THREE.GridHelper(size, divisions, 0xffffff, 0x7f8ea3);
+      gridXY.rotation.x = Math.PI / 2;
+      gridXY.position.set(0, 0, 0);
+      styleGrid(gridXY, 0.2);
+      scene.add(gridXY);
+
+      const gridYZ = new THREE.GridHelper(size, divisions, 0xffffff, 0x7f8ea3);
+      gridYZ.rotation.z = Math.PI / 2;
+      gridYZ.position.set(0, 0, 0);
+      styleGrid(gridYZ, 0.2);
+      scene.add(gridYZ);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+      scene.add(ambient);
+      const key = new THREE.DirectionalLight(0xffffff, 0.45);
+      key.position.set(6, 8, 5);
+      scene.add(key);
+
+      const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
+      const cubeMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffb74d,
+        roughness: 0.45,
+        metalness: 0.08,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false
+      });
+      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      cube.matrixAutoUpdate = false;
+      cube.matrix.identity();
+      scene.add(cube);
+
+      const point = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 18, 18),
+        new THREE.MeshStandardMaterial({ color: 0x7dd3fc, emissive: 0x0f172a })
+      );
+      point.matrixAutoUpdate = false;
+      point.matrix.identity();
+      point.visible = false;
+      scene.add(point);
+
+      const translationVizGroup = new THREE.Group();
+      scene.add(translationVizGroup);
+      const matrixVizGroup = new THREE.Group();
+      scene.add(matrixVizGroup);
+
+      const modeLabel = document.getElementById("modeLabel");
+      const modeToggle = document.getElementById("modeToggle");
+      const toolModeLabel = document.getElementById("toolModeLabel");
+      const toolModeToggle = document.getElementById("toolModeToggle");
+      const matrixTitle = document.getElementById("matrixTitle");
+      const matrixColumnLabels = document.getElementById("matrixColumnLabels");
+      const matrixGrid = document.getElementById("matrixGrid");
+      const transformObjectMode = document.getElementById("transformObjectMode");
+      const copyCurrent = document.getElementById("copyCurrent");
+      const identityTarget = document.getElementById("identityTarget");
+      const applyMatrix = document.getElementById("applyMatrix");
+      const directMultiply = document.getElementById("directMultiply");
+      const setMatrix = document.getElementById("setMatrix");
+      const resetCube = document.getElementById("resetCube");
+      const replayTransformations = document.getElementById("replayTransformations");
+      const doTransformation = document.getElementById("doTransformation");
+      const matrixStatus = document.getElementById("matrixStatus");
+      const operationOutput = document.getElementById("operationOutput");
+      const vizHint = document.getElementById("vizHint");
+      const vizAxisReadout = document.getElementById("vizAxisReadout");
+      const vizTrigToggle = document.getElementById("vizTrigToggle");
+      const vizAxisText = document.getElementById("vizAxisText");
+      const vizLabelOrigin = document.getElementById("vizLabelOrigin");
+      const vizLabelX = document.getElementById("vizLabelX");
+      const vizLabelY = document.getElementById("vizLabelY");
+      const appliedSection = document.getElementById("appliedSection");
+      const chainOutput = document.getElementById("chainOutput");
+      const chainStepSelect = document.getElementById("chainStepSelect");
+      const chainModeTranslate = document.getElementById("chainModeTranslate");
+      const chainModeRotate = document.getElementById("chainModeRotate");
+      const chainModeScale = document.getElementById("chainModeScale");
+      const appliedMatrixList = document.getElementById("appliedMatrixList");
+      const transformControls = [
+        transformObjectMode,
+        copyCurrent,
+        identityTarget,
+        applyMatrix,
+        directMultiply,
+        setMatrix,
+        resetCube,
+        replayTransformations,
+        doTransformation
+      ];
+
+      let matrixInputs = [];
+      let editorMode = "3d";
+      let toolMode = "transform";
+      let transformEntityMode = "cube";
+      let transformEditorMatrix = null;
+      let vizEditorMatrix = null;
+      let transformViewIs2D = false;
+      let matrixVizHandles = { origin: null, x: null, y: null };
+      let vizTrigMode = false;
+      let chainControl = null;
+      const chainControlProxy = new THREE.Object3D();
+      scene.add(chainControlProxy);
+      let selectedAppliedStepIndex = -1;
+      let chainControlMode = "translate";
+      const raycaster = new THREE.Raycaster();
+      const pointerNdc = new THREE.Vector2();
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      let dragState = null;
+      const INTERP_DURATION_MS = 1200;
+
+      function createIdentityMatrix() {
+        const m = new THREE.Matrix4();
+        m.identity();
+        return m;
+      }
+
+      function rebuildMatrixEditor(nextMode, sourceMatrix) {
+        editorMode = nextMode;
+        matrixTitle.textContent = `Cube Matrix (${editorMode === "2d" ? "3x3" : "4x4"})`;
+        const cols = editorMode === "2d" ? 3 : 4;
+        const colDefs = editorMode === "2d"
+          ? [
+              { label: "X", cls: "x" },
+              { label: "Y", cls: "y" },
+              { label: "T", cls: "t" }
+            ]
+          : [
+              { label: "X", cls: "x" },
+              { label: "Y", cls: "y" },
+              { label: "Z", cls: "z" },
+              { label: "T", cls: "t" }
+            ];
+
+        matrixGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        matrixColumnLabels.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        matrixColumnLabels.innerHTML = colDefs
+          .map((col) => `<div class="matrix-col-label label-${col.cls}">${col.label}</div>`)
+          .join("");
+        matrixGrid.innerHTML = "";
+        matrixInputs = [];
+        const total = editorMode === "2d" ? 9 : 16;
+        for (let i = 0; i < total; i += 1) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.spellcheck = false;
+          input.value = "0";
+          const colClass = `col-${colDefs[i % cols].cls}`;
+          input.classList.add(colClass);
+          input.addEventListener("input", onMatrixEditorInputChanged);
+          matrixGrid.appendChild(input);
+          matrixInputs.push(input);
+        }
+        setInputsFromMatrix(sourceMatrix || createIdentityMatrix());
+      }
+
+      function tryReadMatrixFromInputs() {
+        try {
+          return readMatrixFromInputs();
+        } catch {
+          return null;
+        }
+      }
+
+      function getRowMajorFromMatrix(m) {
+        const e = m.elements;
+        return [
+          e[0], e[4], e[8], e[12],
+          e[1], e[5], e[9], e[13],
+          e[2], e[6], e[10], e[14],
+          e[3], e[7], e[11], e[15]
+        ];
+      }
+
+      function setInputsFromMatrix(m) {
+        const rowMajor4 = getRowMajorFromMatrix(m);
+        if (editorMode === "2d") {
+          if (toolMode === "viz" && vizTrigMode) {
+            const { a, b, tx, c, d, ty } = get2DComponentsFromMatrix(m);
+            const sx = Math.hypot(a, c);
+            const sy = Math.hypot(b, d);
+            const thetaDeg = (Math.atan2(c, a) * 180) / Math.PI;
+            const thetaText = formatValue(thetaDeg);
+            const sxText = formatValue(sx);
+            const syText = formatValue(sy);
+
+            matrixInputs[0].value = `${sxText}*cos(${thetaText})`;
+            matrixInputs[1].value = `-${syText}*sin(${thetaText})`;
+            matrixInputs[2].value = String(formatValue(tx));
+            matrixInputs[3].value = `${sxText}*sin(${thetaText})`;
+            matrixInputs[4].value = `${syText}*cos(${thetaText})`;
+            matrixInputs[5].value = String(formatValue(ty));
+            matrixInputs[6].value = "0";
+            matrixInputs[7].value = "0";
+            matrixInputs[8].value = "1";
+            return;
+          }
+
+          const rowMajor3 = [
+            rowMajor4[0], rowMajor4[1], rowMajor4[3],
+            rowMajor4[4], rowMajor4[5], rowMajor4[7],
+            rowMajor4[12], rowMajor4[13], rowMajor4[15]
+          ];
+          for (let i = 0; i < 9; i += 1) {
+            matrixInputs[i].value = String(rowMajor3[i]);
+          }
+          return;
+        }
+        for (let i = 0; i < 16; i += 1) {
+          matrixInputs[i].value = String(rowMajor4[i]);
+        }
+      }
+
+      function getActiveTransformObject() {
+        return transformEntityMode === "point" ? point : cube;
+      }
+
+      function getActiveTransformLabel() {
+        return transformEntityMode === "point" ? "point" : "cube";
+      }
+
+      function getActiveTransformMatrix() {
+        return getActiveTransformObject().matrix.clone();
+      }
+
+      function setActiveTransformMatrix(nextMatrix) {
+        const obj = getActiveTransformObject();
+        obj.matrix.copy(nextMatrix);
+        obj.matrixWorldNeedsUpdate = true;
+      }
+
+      function syncTransformEntityVisibility() {
+        if (toolMode === "viz") {
+          cube.visible = false;
+          point.visible = false;
+          return;
+        }
+        cube.visible = transformEntityMode === "cube";
+        point.visible = transformEntityMode === "point";
+      }
+
+      function formatValue(value) {
+        return Number(value.toFixed(4)).toString();
+      }
+
+      function toRowMajorText(rowMajor) {
+        const lines = [];
+        for (let row = 0; row < 4; row += 1) {
+          const base = row * 4;
+          lines.push(
+            `${formatValue(rowMajor[base])} ${formatValue(rowMajor[base + 1])} ${formatValue(rowMajor[base + 2])} ${formatValue(rowMajor[base + 3])}`
+          );
+        }
+        return lines.join("\n");
+      }
+
+      function matrixToText(matrix4) {
+        return toRowMajorText(getRowMajorFromMatrix(matrix4));
+      }
+
+      function showOperationOutput(lines) {
+        operationOutput.textContent = Array.isArray(lines) ? lines.join("\n") : String(lines || "");
+      }
+
+      function formatVec3(v) {
+        return `(${formatValue(v.x)}, ${formatValue(v.y)}, ${formatValue(v.z)})`;
+      }
+
+      function matrixFromRowMajor(rowMajor) {
+        const m = new THREE.Matrix4();
+        m.set(
+          rowMajor[0], rowMajor[1], rowMajor[2], rowMajor[3],
+          rowMajor[4], rowMajor[5], rowMajor[6], rowMajor[7],
+          rowMajor[8], rowMajor[9], rowMajor[10], rowMajor[11],
+          rowMajor[12], rowMajor[13], rowMajor[14], rowMajor[15]
+        );
+        return m;
+      }
+
+      function get2DComponentsFromMatrix(m) {
+        const r = getRowMajorFromMatrix(m);
+        return {
+          a: r[0],
+          b: r[1],
+          tx: r[3],
+          c: r[4],
+          d: r[5],
+          ty: r[7]
+        };
+      }
+
+      function build2DMatrix({ a, b, tx, c, d, ty }) {
+        const m = new THREE.Matrix4();
+        m.set(
+          a, b, 0, tx,
+          c, d, 0, ty,
+          0, 0, 1, 0,
+          0, 0, 0, 1
+        );
+        return m;
+      }
+
+      function updateVizAxisReadout(matrix) {
+        const { a, b, tx, c, d, ty } = get2DComponentsFromMatrix(matrix);
+        const xTipX = tx + a;
+        const xTipY = ty + c;
+        const yTipX = tx + b;
+        const yTipY = ty + d;
+        if (vizTrigMode) {
+          const sx = Math.hypot(a, c);
+          const sy = Math.hypot(b, d);
+          const theta = Math.atan2(c, a);
+          const thetaDeg = (theta * 180) / Math.PI;
+          vizAxisText.textContent = `origin = (${formatValue(tx)}, ${formatValue(ty)})
+translation point = (${formatValue(tx)}, ${formatValue(ty)})
+x_tip (grid) = (${formatValue(xTipX)}, ${formatValue(xTipY)})
+y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})
+
+theta = ${formatValue(thetaDeg)} deg (${formatValue(theta)} rad)
+sx = ${formatValue(sx)}, sy = ${formatValue(sy)}
+
+2D basis (rotation/scale form):
+x_axis = sx * (cos(theta), sin(theta))
+y_axis = sy * (-sin(theta), cos(theta))
+
+expanded:
+a = sx*cos(theta) = ${formatValue(a)}
+b = -sy*sin(theta) = ${formatValue(b)}
+c = sx*sin(theta) = ${formatValue(c)}
+d = sy*cos(theta) = ${formatValue(d)}`;
+          return;
+        }
+        vizAxisText.textContent = `origin = (${formatValue(tx)}, ${formatValue(ty)})
+x_axis = (${formatValue(a)}, ${formatValue(c)})
+y_axis = (${formatValue(b)}, ${formatValue(d)})
+
+translation point = (${formatValue(tx)}, ${formatValue(ty)})
+x_tip (grid) = (${formatValue(xTipX)}, ${formatValue(xTipY)})
+y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
+      }
+
+      function setVizLabel(el, text, worldPos) {
+        if (!el || !worldPos) return;
+        const projected = worldPos.clone().project(activeCamera);
+        const visible = projected.z >= -1 && projected.z <= 1;
+        if (!visible) {
+          el.classList.add("hidden");
+          return;
+        }
+        const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+        el.textContent = text;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.classList.remove("hidden");
+      }
+
+      function hideVizLabels() {
+        vizLabelOrigin.classList.add("hidden");
+        vizLabelX.classList.add("hidden");
+        vizLabelY.classList.add("hidden");
+      }
+
+      function updateVizHandleLabels() {
+        if (toolMode !== "viz") {
+          hideVizLabels();
+          return;
+        }
+        const matrix = tryReadMatrixFromInputs();
+        if (!matrix) {
+          hideVizLabels();
+          return;
+        }
+        const { a, b, tx, c, d, ty } = get2DComponentsFromMatrix(matrix);
+        const origin = new THREE.Vector3(tx, ty, 0);
+        const xTip = new THREE.Vector3(tx + a, ty + c, 0);
+        const yTip = new THREE.Vector3(tx + b, ty + d, 0);
+        setVizLabel(vizLabelOrigin, `O (${formatValue(tx)}, ${formatValue(ty)})`, origin);
+        setVizLabel(vizLabelX, `X (${formatValue(xTip.x)}, ${formatValue(xTip.y)})`, xTip);
+        setVizLabel(vizLabelY, `Y (${formatValue(yTip.x)}, ${formatValue(yTip.y)})`, yTip);
+      }
+
+      function getAppliedMatrixDisplayData() {
+        const accumulated = new THREE.Matrix4();
+        accumulated.identity();
+        return appliedMatrices.map((entry) => {
+          const m = matrixFromRowMajor(entry.rowMajor);
+          const localTranslation = new THREE.Vector3().setFromMatrixPosition(m);
+          accumulated.multiply(m);
+          const cumulativeTranslation = new THREE.Vector3().setFromMatrixPosition(accumulated);
+          return {
+            ...entry,
+            localTranslation,
+            cumulativeTranslation
+          };
+        });
+      }
+
+      function getAppliedChainData() {
+        const steps = [];
+        const accumulated = new THREE.Matrix4();
+        accumulated.identity();
+        for (let i = 0; i < appliedMatrices.length; i += 1) {
+          const local = matrixFromRowMajor(appliedMatrices[i].rowMajor);
+          const prefix = accumulated.clone();
+          accumulated.multiply(local);
+          const cumulative = accumulated.clone();
+          steps.push({
+            index: i,
+            local,
+            prefix,
+            cumulative
+          });
+        }
+        return steps;
+      }
+
+      function recomputeFinalFromAppliedChain() {
+        const result = new THREE.Matrix4();
+        result.identity();
+        for (const entry of appliedMatrices) {
+          result.multiply(matrixFromRowMajor(entry.rowMajor));
+        }
+        setActiveTransformMatrix(result);
+        scrubStartMatrix = getActiveTransformMatrix();
+      }
+
+      function buildChainKeyframes(extraRowMajor) {
+        const keyframes = [];
+        const cumulative = new THREE.Matrix4();
+        cumulative.identity();
+        keyframes.push(cumulative.clone());
+
+        for (const entry of appliedMatrices) {
+          cumulative.multiply(matrixFromRowMajor(entry.rowMajor));
+          keyframes.push(cumulative.clone());
+        }
+
+        if (extraRowMajor) {
+          cumulative.multiply(matrixFromRowMajor(extraRowMajor));
+          keyframes.push(cumulative.clone());
+        }
+
+        return keyframes;
+      }
+
+      function renderTranslationViz() {
+        translationVizGroup.clear();
+
+        const origin = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12, 12, 12),
+          new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        origin.position.set(0, 0, 0);
+        translationVizGroup.add(origin);
+
+        const data = getAppliedMatrixDisplayData();
+        if (data.length === 0) return;
+
+        const points = [new THREE.Vector3(0, 0, 0), ...data.map((d) => d.cumulativeTranslation.clone())];
+
+        for (let i = 1; i < points.length; i += 1) {
+          const isSelected = selectedAppliedStepIndex === i - 1;
+          const marker = new THREE.Mesh(
+            new THREE.SphereGeometry(isSelected ? 0.18 : 0.14, 12, 12),
+            new THREE.MeshBasicMaterial({ color: isSelected ? 0xffd166 : 0xffa84d })
+          );
+          marker.position.copy(points[i]);
+          marker.userData.stepIndex = i - 1;
+          marker.userData.kind = "chain-point";
+          translationVizGroup.add(marker);
+        }
+
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(
+          lineGeometry,
+          new THREE.LineBasicMaterial({ color: 0xffa84d })
+        );
+        translationVizGroup.add(line);
+      }
+
+      const appliedMatrices = [];
+      let nextAppliedId = 1;
+
+      function refreshChainStepSelect() {
+        const previous = selectedAppliedStepIndex;
+        chainStepSelect.innerHTML = '<option value="">Edit Step: None</option>';
+        for (let i = 0; i < appliedMatrices.length; i += 1) {
+          const option = document.createElement("option");
+          option.value = String(i);
+          option.textContent = `Edit M${appliedMatrices[i].id}`;
+          chainStepSelect.appendChild(option);
+        }
+        if (previous >= 0 && previous < appliedMatrices.length) {
+          selectedAppliedStepIndex = previous;
+          chainStepSelect.value = String(previous);
+        } else {
+          selectedAppliedStepIndex = -1;
+          chainStepSelect.value = "";
+        }
+      }
+
+      function renderAppliedMatrices() {
+        const displayData = getAppliedMatrixDisplayData();
+        if (appliedMatrices.length === 0) {
+          chainOutput.textContent = "M_total = I";
+          appliedMatrixList.className = "applied-empty";
+          appliedMatrixList.textContent = "No matrices applied yet.";
+          renderTranslationViz();
+          refreshChainStepSelect();
+          syncChainControlAttachment();
+          return;
+        }
+
+        const ids = appliedMatrices.map((entry) => `M${entry.id}`);
+        const chain = `M_total = I * ${ids.join(" * ")}`;
+        const stepLines = appliedMatrices.map((entry, idx) => {
+          const prev = idx === 0 ? "I" : `S${idx}`;
+          const next = `S${idx + 1}`;
+          return `${next} = ${prev} * M${entry.id}`;
+        });
+        chainOutput.textContent = [chain, "", ...stepLines].join("\n");
+
+        appliedMatrixList.className = "";
+        appliedMatrixList.innerHTML = displayData
+          .map(
+            (entry, idx) => `
+              <details class="applied-item">
+                <summary>M${entry.id} (multiply)</summary>
+                <pre>S${idx + 1} = ${idx === 0 ? "I" : `S${idx}`} * M${entry.id}</pre>
+                <pre>local T: ${formatVec3(entry.localTranslation)}
+cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
+                <button type="button" data-load-matrix="${entry.id}">Load to Editor</button>
+                <pre>${toRowMajorText(entry.rowMajor)}</pre>
+              </details>
+            `
+          )
+          .join("");
+        renderTranslationViz();
+        refreshChainStepSelect();
+        syncChainControlAttachment();
+      }
+
+      function addAppliedMatrix(rowMajor) {
+        appliedMatrices.push({
+          id: nextAppliedId,
+          rowMajor: [...rowMajor]
+        });
+        nextAppliedId += 1;
+        renderAppliedMatrices();
+      }
+
+      function renderMatrixVizFromCurrentEditor() {
+        matrixVizGroup.clear();
+        matrixVizHandles = { origin: null, x: null, y: null };
+        const matrix = tryReadMatrixFromInputs();
+        if (!matrix) {
+          vizAxisText.textContent = "Invalid matrix input.";
+          hideVizLabels();
+          return;
+        }
+
+        const origin = new THREE.Vector3(0, 0, 0).applyMatrix4(matrix);
+        const xPoint = new THREE.Vector3(1, 0, 0).applyMatrix4(matrix);
+        const yPoint = new THREE.Vector3(0, 1, 0).applyMatrix4(matrix);
+        const xDir = xPoint.clone().sub(origin);
+        const yDir = yPoint.clone().sub(origin);
+
+        const originDot = new THREE.Mesh(
+          new THREE.SphereGeometry(0.18, 14, 14),
+          new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        originDot.userData.dragRole = "origin";
+        originDot.position.copy(origin);
+        matrixVizGroup.add(originDot);
+        matrixVizHandles.origin = originDot;
+
+        if (xDir.lengthSq() > 1e-8) {
+          const xArrow = new THREE.ArrowHelper(
+            xDir.clone().normalize(),
+            origin,
+            xDir.length(),
+            0xff4d4d,
+            0.35,
+            0.2
+          );
+          matrixVizGroup.add(xArrow);
+          const xHandle = new THREE.Mesh(
+            new THREE.SphereGeometry(0.14, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xff4d4d })
+          );
+          xHandle.userData.dragRole = "x";
+          xHandle.position.copy(xPoint);
+          matrixVizGroup.add(xHandle);
+          matrixVizHandles.x = xHandle;
+        }
+        if (yDir.lengthSq() > 1e-8) {
+          const yArrow = new THREE.ArrowHelper(
+            yDir.clone().normalize(),
+            origin,
+            yDir.length(),
+            0x55d26a,
+            0.35,
+            0.2
+          );
+          matrixVizGroup.add(yArrow);
+          const yHandle = new THREE.Mesh(
+            new THREE.SphereGeometry(0.14, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0x55d26a })
+          );
+          yHandle.userData.dragRole = "y";
+          yHandle.position.copy(yPoint);
+          matrixVizGroup.add(yHandle);
+          matrixVizHandles.y = yHandle;
+        }
+        updateVizAxisReadout(matrix);
+        updateVizHandleLabels();
+      }
+
+      function setToolMode(nextMode) {
+        if (toolMode === nextMode) return;
+
+        const currentEditorMatrix = tryReadMatrixFromInputs() || getActiveTransformMatrix();
+        if (toolMode === "transform") {
+          transformEditorMatrix = currentEditorMatrix.clone();
+        } else {
+          vizEditorMatrix = currentEditorMatrix.clone();
+        }
+
+        toolMode = nextMode;
+        const inViz = toolMode === "viz";
+
+        if (inViz) {
+          stopInterpolationNow();
+          dragState = null;
+          if (!vizEditorMatrix) vizEditorMatrix = createIdentityMatrix();
+          is2D = true;
+          activeCamera = camera2D;
+          gridXY.visible = true;
+          gridXZ.visible = false;
+          gridYZ.visible = false;
+          createControls(activeCamera, true);
+          modeLabel.textContent = "Mode: 2D";
+          modeToggle.textContent = "Switch to 3D";
+          modeToggle.disabled = true;
+
+          syncTransformEntityVisibility();
+          translationVizGroup.visible = false;
+          matrixVizGroup.visible = true;
+          appliedSection.classList.add("hidden");
+          vizHint.classList.remove("hidden");
+          vizAxisReadout.classList.remove("hidden");
+          if (chainControl) {
+            chainControl.detach();
+            chainControl.visible = false;
+          }
+
+          rebuildMatrixEditor("2d", vizEditorMatrix);
+          renderMatrixVizFromCurrentEditor();
+          for (const control of transformControls) control.disabled = true;
+          toolModeLabel.textContent = "Tool: Matrix Viz";
+          toolModeToggle.textContent = "Transform Tool";
+          matrixStatus.textContent = "Visualization mode active.";
+          return;
+        }
+
+        modeToggle.disabled = false;
+        syncTransformEntityVisibility();
+        translationVizGroup.visible = true;
+        matrixVizGroup.visible = false;
+        appliedSection.classList.remove("hidden");
+        vizHint.classList.add("hidden");
+        vizAxisReadout.classList.add("hidden");
+
+        is2D = transformViewIs2D;
+        const restoreMode = is2D ? "2d" : "3d";
+        rebuildMatrixEditor(restoreMode, transformEditorMatrix || getActiveTransformMatrix());
+        gridXY.visible = true;
+        gridXZ.visible = !is2D;
+        gridYZ.visible = !is2D;
+        activeCamera = is2D ? camera2D : camera3D;
+        createControls(activeCamera, is2D);
+        for (const control of transformControls) control.disabled = false;
+        modeLabel.textContent = `Mode: ${is2D ? "2D" : "3D"}`;
+        modeToggle.textContent = is2D ? "Switch to 3D" : "Switch to 2D";
+        toolModeLabel.textContent = "Tool: Transform";
+        toolModeToggle.textContent = "Matrix Viz";
+        matrixStatus.textContent = "Transform mode active.";
+        hideVizLabels();
+        syncChainControlAttachment();
+      }
+
+      function onMatrixEditorInputChanged() {
+        if (toolMode === "viz") {
+          renderMatrixVizFromCurrentEditor();
+          return;
+        }
+      }
+
+      function getPointerNdcFromEvent(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointerNdc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointerNdc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      }
+
+      function getWorldPointOnVizPlane(event) {
+        getPointerNdcFromEvent(event);
+        raycaster.setFromCamera(pointerNdc, activeCamera);
+        const hit = new THREE.Vector3();
+        if (!raycaster.ray.intersectPlane(dragPlane, hit)) return null;
+        return hit;
+      }
+
+      function applyVizDragPoint(role, worldPoint) {
+        const matrix = tryReadMatrixFromInputs();
+        if (!matrix) return;
+        const comp = get2DComponentsFromMatrix(matrix);
+        if (role === "origin") {
+          comp.tx = worldPoint.x;
+          comp.ty = worldPoint.y;
+        } else if (role === "x") {
+          comp.a = worldPoint.x - comp.tx;
+          comp.c = worldPoint.y - comp.ty;
+        } else if (role === "y") {
+          comp.b = worldPoint.x - comp.tx;
+          comp.d = worldPoint.y - comp.ty;
+        } else {
+          return;
+        }
+        const next = build2DMatrix(comp);
+        setInputsFromMatrix(next);
+        renderMatrixVizFromCurrentEditor();
+      }
+
+      function onVizPointerDown(event) {
+        if (toolMode === "transform") {
+          const stepMarkers = translationVizGroup.children.filter(
+            (obj) => obj.userData && obj.userData.kind === "chain-point"
+          );
+          if (stepMarkers.length > 0) {
+            getPointerNdcFromEvent(event);
+            raycaster.setFromCamera(pointerNdc, activeCamera);
+            const stepHits = raycaster.intersectObjects(stepMarkers, false);
+            if (stepHits.length > 0) {
+              const hitStep = stepHits[0].object.userData.stepIndex;
+              if (Number.isInteger(hitStep)) {
+                selectedAppliedStepIndex = hitStep;
+                chainStepSelect.value = String(hitStep);
+                renderAppliedMatrices();
+                syncChainControlAttachment();
+                matrixStatus.textContent = `Selected step M${appliedMatrices[hitStep].id}.`;
+                return;
+              }
+            }
+          }
+          return;
+        }
+        if (toolMode !== "viz") return;
+        const handles = [matrixVizHandles.origin, matrixVizHandles.x, matrixVizHandles.y].filter(Boolean);
+        if (handles.length === 0) return;
+        getPointerNdcFromEvent(event);
+        raycaster.setFromCamera(pointerNdc, activeCamera);
+        const hits = raycaster.intersectObjects(handles, false);
+        if (hits.length === 0) return;
+        const role = hits[0].object.userData.dragRole;
+        if (!role) return;
+        dragState = { dragMode: "viz", role };
+        controls.enabled = false;
+        renderer.domElement.setPointerCapture(event.pointerId);
+      }
+
+      function onVizPointerMove(event) {
+        if (!dragState) return;
+        const point = getWorldPointOnVizPlane(event);
+        if (!point) return;
+        if (dragState.dragMode === "viz") {
+          if (toolMode !== "viz") return;
+          applyVizDragPoint(dragState.role, point);
+          return;
+        }
+      }
+
+      function onVizPointerUp(event) {
+        if (!dragState) return;
+        dragState = null;
+        controls.enabled = true;
+        try {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        } catch {
+          // no-op
+        }
+      }
+
+      transformEditorMatrix = createIdentityMatrix();
+      vizEditorMatrix = createIdentityMatrix();
+      createControls(activeCamera, is2D);
+      rebuildMatrixEditor("3d", transformEditorMatrix);
+      syncChainControlModeButtons();
+      resetCube.textContent = "Reset Cube";
+      syncTransformEntityVisibility();
+      renderAppliedMatrices();
+
+      function readMatrixFromInputs() {
+        const nums = matrixInputs.map((input) => evaluateCellExpression(input.value));
+        for (const value of nums) {
+          if (!Number.isFinite(value)) {
+            throw new Error("Matrix has invalid numeric value.");
+          }
+        }
+        if (editorMode === "2d") {
+          const m2d = new THREE.Matrix4();
+          m2d.set(
+            nums[0], nums[1], 0, nums[2],
+            nums[3], nums[4], 0, nums[5],
+            0, 0, 1, 0,
+            nums[6], nums[7], 0, nums[8]
+          );
+          return m2d;
+        }
+        const m = new THREE.Matrix4();
+        m.set(
+          nums[0], nums[1], nums[2], nums[3],
+          nums[4], nums[5], nums[6], nums[7],
+          nums[8], nums[9], nums[10], nums[11],
+          nums[12], nums[13], nums[14], nums[15]
+        );
+        return m;
+      }
+
+      function evaluateCellExpression(raw) {
+        const text = String(raw || "").trim().toLowerCase();
+        if (!text) {
+          throw new Error("Matrix cell cannot be empty.");
+        }
+
+        // Allow only numbers, operators, whitespace, parentheses, commas, and known identifiers.
+        if (/[^0-9a-z+\-*/^().,\s]/i.test(text)) {
+          throw new Error(`Invalid characters in expression: ${raw}`);
+        }
+
+        let expr = text;
+        expr = expr.replace(/\bpi\b/g, "Math.PI");
+        expr = expr.replace(/\be\b/g, "Math.E");
+        expr = expr.replace(/\^/g, "**");
+        expr = expr.replace(/\b(sin|cos|tan)\s+([^\s][^,]*)/g, "Math.$1($2)");
+        expr = expr.replace(/\b(sin|cos|tan)\s*\(/g, "$1(");
+        expr = expr.replace(/\bmath\.(sin|cos|tan)\s*\(/g, "$1(");
+
+        if (/[^0-9+\-*/().,\s*a-zA-Z_]/.test(expr)) {
+          throw new Error(`Expression not allowed: ${raw}`);
+        }
+        const identifiers = expr.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+        const allowed = new Set(["Math", "PI", "E", "sin", "cos", "tan"]);
+        for (const id of identifiers) {
+          if (!allowed.has(id)) {
+            throw new Error(`Unknown token in expression: ${id}`);
+          }
+        }
+
+        let value;
+        try {
+          value = Function(
+            `"use strict";
+const sin = (deg) => Math.sin((deg * Math.PI) / 180);
+const cos = (deg) => Math.cos((deg * Math.PI) / 180);
+const tan = (deg) => Math.tan((deg * Math.PI) / 180);
+return (${expr});`
+          )();
+        } catch {
+          throw new Error(`Invalid expression: ${raw}`);
+        }
+        if (!Number.isFinite(value)) {
+          throw new Error(`Expression not finite: ${raw}`);
+        }
+        return value;
+      }
+
+      function applyInterpolatedMatrix(startMatrix, endMatrix, t) {
+        const aPos = new THREE.Vector3();
+        const aQuat = new THREE.Quaternion();
+        const aScale = new THREE.Vector3();
+        const bPos = new THREE.Vector3();
+        const bQuat = new THREE.Quaternion();
+        const bScale = new THREE.Vector3();
+        startMatrix.decompose(aPos, aQuat, aScale);
+        endMatrix.decompose(bPos, bQuat, bScale);
+
+        const pos = aPos.lerp(bPos, t);
+        const quat = aQuat.slerp(bQuat, t);
+        const scale = aScale.lerp(bScale, t);
+        const out = new THREE.Matrix4().compose(pos, quat, scale);
+        setActiveTransformMatrix(out);
+      }
+
+      function getEasedT(t) {
+        return t * t * (3 - 2 * t);
+      }
+
+      let interpolation = null;
+      let scrubStartMatrix = getActiveTransformMatrix();
+
+      function stopInterpolationNow() {
+        interpolation = null;
+      }
+
+      function completeInterpolationNow() {
+        if (!interpolation) return false;
+        const done = interpolation;
+        applyInterpolatedMatrix(done.startMatrix, done.endMatrix, 1);
+        interpolation = null;
+        matrixStatus.textContent = done.completeMessage || "Interpolation complete.";
+        if (done.historyRowMajor) addAppliedMatrix(done.historyRowMajor);
+        scrubStartMatrix = getActiveTransformMatrix();
+        showOperationOutput([
+          "Edited / Current Chain Result:",
+          "",
+          `${getActiveTransformLabel()} current:`,
+          matrixToText(getActiveTransformObject().matrix)
+        ]);
+        return true;
+      }
+
+      applyMatrix.addEventListener("click", () => {
+        try {
+          stopInterpolationNow();
+          const inputMatrix = readMatrixFromInputs();
+          const rowMajor = getRowMajorFromMatrix(inputMatrix);
+          const durationMs = INTERP_DURATION_MS;
+          const entityLabel = getActiveTransformLabel();
+          const startMatrix = getActiveTransformMatrix();
+          const endMatrix = startMatrix.clone().multiply(inputMatrix);
+          showOperationOutput([
+            `${entityLabel}_next = ${entityLabel}_current * M_editor`,
+            "",
+            `${entityLabel}_current:`,
+            matrixToText(startMatrix),
+            "",
+            "M_editor:",
+            matrixToText(inputMatrix),
+            "",
+            `${entityLabel}_next:`,
+            matrixToText(endMatrix)
+          ]);
+          interpolation = {
+            startMatrix,
+            endMatrix,
+            startTime: performance.now(),
+            durationMs,
+            completeMessage: "Multiply interpolation complete.",
+            historyRowMajor: rowMajor
+          };
+          matrixStatus.textContent = "Interpolating multiply...";
+          scrubStartMatrix = startMatrix.clone();
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
+        }
+      });
+
+      directMultiply.addEventListener("click", () => {
+        try {
+          stopInterpolationNow();
+          const inputMatrix = readMatrixFromInputs();
+          const rowMajor = getRowMajorFromMatrix(inputMatrix);
+          const entityLabel = getActiveTransformLabel();
+          const current = getActiveTransformMatrix();
+          const next = current.clone().multiply(inputMatrix);
+          setActiveTransformMatrix(next);
+          addAppliedMatrix(rowMajor);
+          showOperationOutput([
+            `${entityLabel}_next = ${entityLabel}_current * M_editor (direct)`,
+            "",
+            `${entityLabel}_current:`,
+            matrixToText(current),
+            "",
+            "M_editor:",
+            matrixToText(inputMatrix),
+            "",
+            `${entityLabel}_next:`,
+            matrixToText(next)
+          ]);
+          matrixStatus.textContent = "Direct multiply applied.";
+          scrubStartMatrix = getActiveTransformMatrix();
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
+        }
+      });
+
+      setMatrix.addEventListener("click", () => {
+        try {
+          const inputMatrix = readMatrixFromInputs();
+          const entityLabel = getActiveTransformLabel();
+          setActiveTransformMatrix(inputMatrix);
+          showOperationOutput([
+            `${entityLabel} = M_editor`,
+            "",
+            "M_editor:",
+            matrixToText(inputMatrix),
+            "",
+            `${entityLabel}:`,
+            matrixToText(getActiveTransformObject().matrix)
+          ]);
+          matrixStatus.textContent = `Applied: ${entityLabel} = M`;
+          scrubStartMatrix = getActiveTransformMatrix();
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
+        }
+      });
+
+      copyCurrent.addEventListener("click", () => {
+        setInputsFromMatrix(getActiveTransformObject().matrix);
+        matrixStatus.textContent = `Target matrix updated from current ${getActiveTransformLabel()} transform.`;
+      });
+
+      identityTarget.addEventListener("click", () => {
+        setInputsFromMatrix(new THREE.Matrix4());
+        matrixStatus.textContent = "Target matrix set to identity.";
+      });
+
+      replayTransformations.addEventListener("click", () => {
+        try {
+          stopInterpolationNow();
+          const keyframes = buildChainKeyframes();
+          if (keyframes.length <= 1) {
+            matrixStatus.textContent = "No applied chain to replay yet.";
+            return;
+          }
+          const durationMs = INTERP_DURATION_MS;
+          const entityLabel = getActiveTransformLabel();
+          showOperationOutput([
+            `Replay Chain: ${entityLabel}(t) from I to chain result`,
+            "",
+            "I (identity):",
+            matrixToText(keyframes[0]),
+            "",
+            "chain_result:",
+            matrixToText(keyframes[keyframes.length - 1])
+          ]);
+          setActiveTransformMatrix(keyframes[0]);
+          interpolation = {
+            startMatrix: keyframes[0].clone(),
+            endMatrix: keyframes[keyframes.length - 1].clone(),
+            keyframes,
+            startTime: performance.now(),
+            durationMs,
+            completeMessage: "Chain replay complete."
+          };
+          matrixStatus.textContent = "Replaying transformations step-by-step...";
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
+        }
+      });
+
+      doTransformation.addEventListener("click", () => {
+        try {
+          stopInterpolationNow();
+          const keyframes = buildChainKeyframes();
+          if (keyframes.length <= 1) {
+            matrixStatus.textContent = "No applied chain to run yet.";
+            return;
+          }
+          const durationMs = INTERP_DURATION_MS;
+          const start = keyframes[0].clone();
+          const end = keyframes[keyframes.length - 1].clone();
+          setActiveTransformMatrix(start);
+          interpolation = {
+            startMatrix: start,
+            endMatrix: end,
+            startTime: performance.now(),
+            durationMs,
+            completeMessage: "Transformation complete."
+          };
+          matrixStatus.textContent = "Applying full transformation...";
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
+        }
+      });
+
+      resetCube.addEventListener("click", () => {
+        stopInterpolationNow();
+        const identity = createIdentityMatrix();
+        setActiveTransformMatrix(identity);
+        setInputsFromMatrix(identity);
+        const entityLabel = getActiveTransformLabel();
+        showOperationOutput([
+          "Reset:",
+          "",
+          `${entityLabel} = I`,
+          "",
+          "I (identity):",
+          matrixToText(identity)
+        ]);
+        matrixStatus.textContent = `${entityLabel} reset to identity transform.`;
+        appliedMatrices.length = 0;
+        nextAppliedId = 1;
+        renderAppliedMatrices();
+        scrubStartMatrix = getActiveTransformMatrix();
+      });
+
+      appliedMatrixList.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const idText = target.getAttribute("data-load-matrix");
+        if (!idText) return;
+        const id = Number(idText);
+        const entry = appliedMatrices.find((item) => item.id === id);
+        if (!entry) return;
+        const m = new THREE.Matrix4();
+        m.set(
+          entry.rowMajor[0], entry.rowMajor[1], entry.rowMajor[2], entry.rowMajor[3],
+          entry.rowMajor[4], entry.rowMajor[5], entry.rowMajor[6], entry.rowMajor[7],
+          entry.rowMajor[8], entry.rowMajor[9], entry.rowMajor[10], entry.rowMajor[11],
+          entry.rowMajor[12], entry.rowMajor[13], entry.rowMajor[14], entry.rowMajor[15]
+        );
+        setInputsFromMatrix(m);
+        matrixStatus.textContent = `Loaded M${id} into editor.`;
+      });
+
+      modeToggle.addEventListener("click", () => {
+        if (toolMode === "viz") return;
+        let preservedEditorMatrix = createIdentityMatrix();
+        try {
+          preservedEditorMatrix = readMatrixFromInputs();
+        } catch {
+          preservedEditorMatrix = getActiveTransformMatrix();
+        }
+        is2D = !is2D;
+        transformViewIs2D = is2D;
+        activeCamera = is2D ? camera2D : camera3D;
+
+        gridXY.visible = true;
+        gridXZ.visible = !is2D;
+        gridYZ.visible = !is2D;
+        rebuildMatrixEditor(is2D ? "2d" : "3d", preservedEditorMatrix);
+        transformEditorMatrix = preservedEditorMatrix.clone();
+
+        createControls(activeCamera, is2D);
+        modeLabel.textContent = `Mode: ${is2D ? "2D" : "3D"}`;
+        modeToggle.textContent = is2D ? "Switch to 3D" : "Switch to 2D";
+      });
+
+      transformObjectMode.addEventListener("change", () => {
+        if (toolMode === "viz") return;
+        stopInterpolationNow();
+        transformEntityMode = transformObjectMode.value === "point" ? "point" : "cube";
+        syncTransformEntityVisibility();
+        const current = getActiveTransformMatrix();
+        setInputsFromMatrix(current);
+        transformEditorMatrix = current.clone();
+        resetCube.textContent = transformEntityMode === "point" ? "Reset Point" : "Reset Cube";
+        matrixStatus.textContent = `Transform object set to ${getActiveTransformLabel()}.`;
+        syncChainControlAttachment();
+      });
+
+      chainStepSelect.addEventListener("change", () => {
+        const value = chainStepSelect.value;
+        selectedAppliedStepIndex = value === "" ? -1 : Number(value);
+        syncChainControlAttachment();
+      });
+
+      chainModeTranslate.addEventListener("click", () => {
+        chainControlMode = "translate";
+        syncChainControlModeButtons();
+        syncChainControlAttachment();
+      });
+      chainModeRotate.addEventListener("click", () => {
+        chainControlMode = "rotate";
+        syncChainControlModeButtons();
+        syncChainControlAttachment();
+      });
+      chainModeScale.addEventListener("click", () => {
+        chainControlMode = "scale";
+        syncChainControlModeButtons();
+        syncChainControlAttachment();
+      });
+
+      toolModeToggle.addEventListener("click", () => {
+        setToolMode(toolMode === "transform" ? "viz" : "transform");
+      });
+
+      vizTrigToggle.addEventListener("click", () => {
+        vizTrigMode = !vizTrigMode;
+        vizTrigToggle.textContent = `Trig View: ${vizTrigMode ? "On" : "Off"}`;
+        if (toolMode === "viz") {
+          const current = tryReadMatrixFromInputs();
+          if (current) {
+            setInputsFromMatrix(current);
+          }
+          renderMatrixVizFromCurrentEditor();
+        }
+      });
+
+      renderer.domElement.addEventListener("pointerdown", onVizPointerDown);
+      renderer.domElement.addEventListener("pointermove", onVizPointerMove);
+      renderer.domElement.addEventListener("pointerup", onVizPointerUp);
+      renderer.domElement.addEventListener("pointercancel", onVizPointerUp);
+
+      function onResize() {
+        const nextAspect = window.innerWidth / window.innerHeight;
+        camera3D.aspect = nextAspect;
+        camera3D.updateProjectionMatrix();
+
+        camera2D.left = (-frustumSize * nextAspect) / 2;
+        camera2D.right = (frustumSize * nextAspect) / 2;
+        camera2D.top = frustumSize / 2;
+        camera2D.bottom = -frustumSize / 2;
+        camera2D.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        updateVizHandleLabels();
+      }
+      window.addEventListener("resize", onResize);
+
+      function animate() {
+        if (interpolation) {
+          const elapsed = performance.now() - interpolation.startTime;
+          const rawT = Math.min(1, elapsed / interpolation.durationMs);
+          if (Array.isArray(interpolation.keyframes) && interpolation.keyframes.length > 1) {
+            const frames = interpolation.keyframes;
+            const segments = frames.length - 1;
+            const global = rawT * segments;
+            const idx = Math.min(segments - 1, Math.floor(global));
+            const localT = Math.min(1, Math.max(0, global - idx));
+            const easedLocal = getEasedT(localT);
+            applyInterpolatedMatrix(frames[idx], frames[idx + 1], easedLocal);
+          } else {
+            const easedT = getEasedT(rawT);
+            applyInterpolatedMatrix(interpolation.startMatrix, interpolation.endMatrix, easedT);
+          }
+          if (rawT >= 1) {
+            completeInterpolationNow();
+          }
+        }
+        controls.update();
+        updateVizHandleLabels();
+        renderer.render(scene, activeCamera);
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
