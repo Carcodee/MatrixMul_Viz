@@ -1423,10 +1423,15 @@ y_axis = (0, 1)</pre>
             }
             const next = getActiveTransformMatrix();
             next.setPosition(tx, ty, tz);
-            setActiveTransformMatrix(next);
-            rebaseAppliedChainToCurrent(next);
-            setInputsFromMatrix(next);
-            transformEditorMatrix = next.clone();
+            chainBaseMatrix = next.clone();
+            if (appliedMatrices.length > 0) {
+              recomputeFinalFromAppliedChain();
+            } else {
+              setActiveTransformMatrix(next);
+            }
+            const finalCurrent = getActiveTransformMatrix();
+            setInputsFromMatrix(finalCurrent);
+            transformEditorMatrix = finalCurrent.clone();
             renderAppliedMatrices();
             matrixStatus.textContent = "Point translation updated.";
           };
@@ -2566,9 +2571,14 @@ return (${expr});`
         try {
           const inputMatrix = readMatrixFromInputs();
           const entityLabel = getActiveTransformLabel();
-          setActiveTransformMatrix(inputMatrix);
-          rebaseAppliedChainToCurrent(inputMatrix);
+          chainBaseMatrix = inputMatrix.clone();
+          if (appliedMatrices.length > 0) {
+            recomputeFinalFromAppliedChain();
+          } else {
+            setActiveTransformMatrix(inputMatrix);
+          }
           renderAppliedMatrices();
+          const finalCurrent = getActiveTransformMatrix();
           showOperationOutput([
             `${entityLabel} = M_editor`,
             "",
@@ -2576,10 +2586,10 @@ return (${expr});`
             matrixToText(inputMatrix),
             "",
             `${entityLabel}:`,
-            matrixToText(getActiveTransformObject().matrix)
+            matrixToText(finalCurrent)
           ]);
           matrixStatus.textContent = `Applied: ${entityLabel} = M`;
-          scrubStartMatrix = getActiveTransformMatrix();
+          scrubStartMatrix = finalCurrent.clone();
         } catch (err) {
           matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
         }
