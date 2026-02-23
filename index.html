@@ -1109,13 +1109,25 @@ y_axis = (0, 1)</pre>
 
       const pointWorldPath = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
-        new THREE.LineBasicMaterial({ color: 0x7dd3fc })
+        new THREE.LineDashedMaterial({
+          color: 0x7dd3fc,
+          dashSize: 0.3,
+          gapSize: 0.2,
+          transparent: true,
+          opacity: 0.42
+        })
       );
       pointWorldVizGroup.add(pointWorldPath);
 
       const pointWorldProjection = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
-        new THREE.LineDashedMaterial({ color: 0x7dd3fc, dashSize: 0.25, gapSize: 0.18, transparent: true, opacity: 0.8 })
+        new THREE.LineDashedMaterial({
+          color: 0x7dd3fc,
+          dashSize: 0.24,
+          gapSize: 0.2,
+          transparent: true,
+          opacity: 0.38
+        })
       );
       pointWorldVizGroup.add(pointWorldProjection);
 
@@ -1190,10 +1202,12 @@ y_axis = (0, 1)</pre>
       scene.add(chainControlProxy);
       let selectedAppliedStepIndex = -1;
       let chainControlMode = "none";
+      let chainBaseMatrix = new THREE.Matrix4().identity();
       const raycaster = new THREE.Raycaster();
       const pointerNdc = new THREE.Vector2();
       const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
       let dragState = null;
+      let interpolation = null;
       let mathMulAnimation = null;
       let mathMulManualStep = 0;
       let mathMulManualSize = 4;
@@ -1410,8 +1424,10 @@ y_axis = (0, 1)</pre>
             const next = getActiveTransformMatrix();
             next.setPosition(tx, ty, tz);
             setActiveTransformMatrix(next);
+            rebaseAppliedChainToCurrent(next);
             setInputsFromMatrix(next);
             transformEditorMatrix = next.clone();
+            renderAppliedMatrices();
             matrixStatus.textContent = "Point translation updated.";
           };
 
@@ -1844,6 +1860,7 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         const projected = new THREE.Vector3(pointPos.x, pointPos.y, 0);
 
         pointWorldPath.geometry.setFromPoints([origin, pointPos]);
+        pointWorldPath.computeLineDistances();
         pointWorldProjection.geometry.setFromPoints([pointPos, projected]);
         pointWorldProjection.computeLineDistances();
         pointWorldProjectedDot.position.copy(projected);
@@ -1876,8 +1893,7 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
       }
 
       function getAppliedMatrixDisplayData() {
-        const accumulated = new THREE.Matrix4();
-        accumulated.identity();
+        const accumulated = chainBaseMatrix.clone();
         return appliedMatrices.map((entry) => {
           const m = matrixFromRowMajor(entry.rowMajor);
           const localTranslation = new THREE.Vector3().setFromMatrixPosition(m);
@@ -1893,8 +1909,7 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
 
       function getAppliedChainData() {
         const steps = [];
-        const accumulated = new THREE.Matrix4();
-        accumulated.identity();
+        const accumulated = chainBaseMatrix.clone();
         for (let i = 0; i < appliedMatrices.length; i += 1) {
           const local = matrixFromRowMajor(appliedMatrices[i].rowMajor);
           const prefix = accumulated.clone();
@@ -1910,9 +1925,30 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         return steps;
       }
 
+      function getAppliedProductMatrix() {
+        const product = new THREE.Matrix4();
+        product.identity();
+        for (const entry of appliedMatrices) {
+          product.multiply(matrixFromRowMajor(entry.rowMajor));
+        }
+        return product;
+      }
+
+      function rebaseAppliedChainToCurrent(currentMatrix) {
+        if (appliedMatrices.length === 0) {
+          chainBaseMatrix = currentMatrix.clone();
+          return;
+        }
+        const product = getAppliedProductMatrix();
+        if (Math.abs(product.determinant()) < 1e-8) {
+          return;
+        }
+        product.invert();
+        chainBaseMatrix = currentMatrix.clone().multiply(product);
+      }
+
       function recomputeFinalFromAppliedChain() {
-        const result = new THREE.Matrix4();
-        result.identity();
+        const result = chainBaseMatrix.clone();
         for (const entry of appliedMatrices) {
           result.multiply(matrixFromRowMajor(entry.rowMajor));
         }
@@ -1922,8 +1958,7 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
 
       function buildChainKeyframes(extraRowMajor) {
         const keyframes = [];
-        const cumulative = new THREE.Matrix4();
-        cumulative.identity();
+        const cumulative = chainBaseMatrix.clone();
         keyframes.push(cumulative.clone());
 
         for (const entry of appliedMatrices) {
@@ -1950,8 +1985,6 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         translationVizGroup.add(origin);
 
         const steps = getAppliedChainData();
-        if (steps.length === 0) return;
-
         const points = [new THREE.Vector3(0, 0, 0)];
 
         for (let i = 0; i < steps.length; i += 1) {
@@ -1987,11 +2020,35 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
           translationVizGroup.add(marker);
         }
 
+        // While an interpolated multiply is running, preview its in-flight translation path.
+        if (interpolation && interpolation.historyRowMajor) {
+          const previewPos = new THREE.Vector3().setFromMatrixPosition(getActiveTransformObject().matrix);
+          const last = points[points.length - 1];
+          if (last.distanceToSquared(previewPos) > 1e-8) {
+            points.push(previewPos.clone());
+          }
+          const previewMarker = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12, 10, 10),
+            new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.6 })
+          );
+          previewMarker.position.copy(previewPos);
+          translationVizGroup.add(previewMarker);
+        }
+
+        if (points.length < 2) return;
+
         const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
         const line = new THREE.Line(
           lineGeometry,
-          new THREE.LineBasicMaterial({ color: 0xffa84d })
+          new THREE.LineDashedMaterial({
+            color: 0xffa84d,
+            dashSize: 0.3,
+            gapSize: 0.2,
+            transparent: true,
+            opacity: 0.4
+          })
         );
+        line.computeLineDistances();
         translationVizGroup.add(line);
       }
 
@@ -2048,7 +2105,10 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
         updateMathVisualizer();
       }
 
-      function addAppliedMatrix(rowMajor) {
+      function addAppliedMatrix(rowMajor, baseMatrix) {
+        if (appliedMatrices.length === 0 && baseMatrix instanceof THREE.Matrix4) {
+          chainBaseMatrix = baseMatrix.clone();
+        }
         appliedMatrices.push({
           id: nextAppliedId,
           rowMajor: [...rowMajor]
@@ -2414,7 +2474,6 @@ return (${expr});`
         return t * t * (3 - 2 * t);
       }
 
-      let interpolation = null;
       let scrubStartMatrix = getActiveTransformMatrix();
 
       function stopInterpolationNow() {
@@ -2427,7 +2486,7 @@ return (${expr});`
         applyInterpolatedMatrix(done.startMatrix, done.endMatrix, 1);
         interpolation = null;
         matrixStatus.textContent = done.completeMessage || "Interpolation complete.";
-        if (done.historyRowMajor) addAppliedMatrix(done.historyRowMajor);
+        if (done.historyRowMajor) addAppliedMatrix(done.historyRowMajor, done.startMatrix);
         scrubStartMatrix = getActiveTransformMatrix();
         showOperationOutput([
           "Edited / Current Chain Result:",
@@ -2483,7 +2542,7 @@ return (${expr});`
           const current = getActiveTransformMatrix();
           const next = current.clone().multiply(inputMatrix);
           setActiveTransformMatrix(next);
-          addAppliedMatrix(rowMajor);
+          addAppliedMatrix(rowMajor, current);
           showOperationOutput([
             `${entityLabel}_next = ${entityLabel}_current * M_editor (direct)`,
             "",
@@ -2508,6 +2567,8 @@ return (${expr});`
           const inputMatrix = readMatrixFromInputs();
           const entityLabel = getActiveTransformLabel();
           setActiveTransformMatrix(inputMatrix);
+          rebaseAppliedChainToCurrent(inputMatrix);
+          renderAppliedMatrices();
           showOperationOutput([
             `${entityLabel} = M_editor`,
             "",
@@ -2610,6 +2671,7 @@ return (${expr});`
         matrixStatus.textContent = `${entityLabel} reset to identity transform.`;
         appliedMatrices.length = 0;
         nextAppliedId = 1;
+        chainBaseMatrix = createIdentityMatrix();
         renderAppliedMatrices();
         scrubStartMatrix = getActiveTransformMatrix();
       });
@@ -2804,6 +2866,9 @@ return (${expr});`
               updateMathVisualizer();
             }
           }
+        }
+        if (interpolation && toolMode === "transform") {
+          renderTranslationViz();
         }
         controls.update();
         updateVizHandleLabels();
