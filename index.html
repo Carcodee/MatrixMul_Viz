@@ -872,6 +872,7 @@ y_axis = (0, 1)</pre>
         <div class="matrix-actions">
           <button id="applyMatrix" type="button">Apply Multiply</button>
           <button id="directMultiply" type="button">Direct Multiply</button>
+          <button id="revertByInverse" type="button">Revert (Inverse)</button>
           <button id="setMatrix" type="button">Apply Set</button>
           <button id="replayTransformations" type="button">Replay Transformations</button>
           <button id="doTransformation" type="button">Do Transformation</button>
@@ -1150,6 +1151,7 @@ y_axis = (0, 1)</pre>
       const identityTarget = document.getElementById("identityTarget");
       const applyMatrix = document.getElementById("applyMatrix");
       const directMultiply = document.getElementById("directMultiply");
+      const revertByInverse = document.getElementById("revertByInverse");
       const setMatrix = document.getElementById("setMatrix");
       const resetCube = document.getElementById("resetCube");
       const replayTransformations = document.getElementById("replayTransformations");
@@ -1182,6 +1184,7 @@ y_axis = (0, 1)</pre>
         identityTarget,
         applyMatrix,
         directMultiply,
+        revertByInverse,
         setMatrix,
         resetCube,
         replayTransformations,
@@ -1203,6 +1206,8 @@ y_axis = (0, 1)</pre>
       let selectedAppliedStepIndex = -1;
       let chainControlMode = "none";
       let chainBaseMatrix = new THREE.Matrix4().identity();
+      let currentGlobalMatrix = new THREE.Matrix4().identity();
+      let pointBaseMatrix = new THREE.Matrix4().identity();
       const raycaster = new THREE.Raycaster();
       const pointerNdc = new THREE.Vector2();
       const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -1357,10 +1362,17 @@ y_axis = (0, 1)</pre>
         return getActiveTransformObject().matrix.clone();
       }
 
+      function getGlobalTransformMatrix() {
+        return currentGlobalMatrix.clone();
+      }
+
       function setActiveTransformMatrix(nextMatrix) {
-        const obj = getActiveTransformObject();
-        obj.matrix.copy(nextMatrix);
-        obj.matrixWorldNeedsUpdate = true;
+        currentGlobalMatrix = nextMatrix.clone();
+        cube.matrix.copy(currentGlobalMatrix);
+        cube.matrixWorldNeedsUpdate = true;
+        const pointFinal = pointBaseMatrix.clone().multiply(currentGlobalMatrix);
+        point.matrix.copy(pointFinal);
+        point.matrixWorldNeedsUpdate = true;
         updateCurrentStatePanel();
         updateMathVisualizer();
       }
@@ -1397,7 +1409,7 @@ y_axis = (0, 1)</pre>
       function updateCurrentStatePanel() {
         if (!currentStateContent) return;
         const entityLabel = getActiveTransformLabel();
-        const currentMatrix = getActiveTransformMatrix();
+        const currentMatrix = entityLabel === "point" ? pointBaseMatrix.clone() : getActiveTransformMatrix();
         const translation = new THREE.Vector3().setFromMatrixPosition(currentMatrix);
         currentStateContent.innerHTML = renderCurrentStatePanel({
           entityLabel,
@@ -1421,18 +1433,12 @@ y_axis = (0, 1)</pre>
               matrixStatus.textContent = "Point translation must be numeric.";
               return;
             }
-            const next = getActiveTransformMatrix();
+            const next = pointBaseMatrix.clone();
             next.setPosition(tx, ty, tz);
-            chainBaseMatrix = next.clone();
-            if (appliedMatrices.length > 0) {
-              recomputeFinalFromAppliedChain();
-            } else {
-              setActiveTransformMatrix(next);
-            }
-            const finalCurrent = getActiveTransformMatrix();
-            setInputsFromMatrix(finalCurrent);
-            transformEditorMatrix = finalCurrent.clone();
-            renderAppliedMatrices();
+            pointBaseMatrix = next;
+            setActiveTransformMatrix(getGlobalTransformMatrix());
+            setInputsFromMatrix(getGlobalTransformMatrix());
+            transformEditorMatrix = getGlobalTransformMatrix();
             matrixStatus.textContent = "Point translation updated.";
           };
 
@@ -1656,7 +1662,7 @@ y_axis = (0, 1)</pre>
           mathMulManualStep = 0;
         }
         const entityLabel = getActiveTransformLabel();
-        const currentMatrix = getActiveTransformMatrix();
+        const currentMatrix = getGlobalTransformMatrix();
         const editorMatrix = tryReadMatrixFromInputs();
         let html = "";
 
@@ -1958,7 +1964,7 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
           result.multiply(matrixFromRowMajor(entry.rowMajor));
         }
         setActiveTransformMatrix(result);
-        scrubStartMatrix = getActiveTransformMatrix();
+        scrubStartMatrix = getGlobalTransformMatrix();
       }
 
       function buildChainKeyframes(extraRowMajor) {
@@ -2192,7 +2198,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
       function setToolMode(nextMode) {
         if (toolMode === nextMode) return;
 
-        const currentEditorMatrix = tryReadMatrixFromInputs() || getActiveTransformMatrix();
+        const currentEditorMatrix = tryReadMatrixFromInputs() || getGlobalTransformMatrix();
         if (toolMode === "transform") {
           transformEditorMatrix = currentEditorMatrix.clone();
         } else {
@@ -2246,7 +2252,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
 
         is2D = transformViewIs2D;
         const restoreMode = is2D ? "2d" : "3d";
-        rebuildMatrixEditor(restoreMode, transformEditorMatrix || getActiveTransformMatrix());
+        rebuildMatrixEditor(restoreMode, transformEditorMatrix || getGlobalTransformMatrix());
         gridXY.visible = true;
         gridXZ.visible = !is2D;
         gridYZ.visible = !is2D;
@@ -2479,7 +2485,7 @@ return (${expr});`
         return t * t * (3 - 2 * t);
       }
 
-      let scrubStartMatrix = getActiveTransformMatrix();
+      let scrubStartMatrix = getGlobalTransformMatrix();
 
       function stopInterpolationNow() {
         interpolation = null;
@@ -2492,7 +2498,7 @@ return (${expr});`
         interpolation = null;
         matrixStatus.textContent = done.completeMessage || "Interpolation complete.";
         if (done.historyRowMajor) addAppliedMatrix(done.historyRowMajor, done.startMatrix);
-        scrubStartMatrix = getActiveTransformMatrix();
+        scrubStartMatrix = getGlobalTransformMatrix();
         showOperationOutput([
           "Edited / Current Chain Result:",
           "",
@@ -2509,7 +2515,7 @@ return (${expr});`
           const rowMajor = getRowMajorFromMatrix(inputMatrix);
           const durationMs = INTERP_DURATION_MS;
           const entityLabel = getActiveTransformLabel();
-          const startMatrix = getActiveTransformMatrix();
+          const startMatrix = getGlobalTransformMatrix();
           const endMatrix = startMatrix.clone().multiply(inputMatrix);
           showOperationOutput([
             `${entityLabel}_next = ${entityLabel}_current * M_editor`,
@@ -2544,7 +2550,7 @@ return (${expr});`
           const inputMatrix = readMatrixFromInputs();
           const rowMajor = getRowMajorFromMatrix(inputMatrix);
           const entityLabel = getActiveTransformLabel();
-          const current = getActiveTransformMatrix();
+          const current = getGlobalTransformMatrix();
           const next = current.clone().multiply(inputMatrix);
           setActiveTransformMatrix(next);
           addAppliedMatrix(rowMajor, current);
@@ -2561,7 +2567,41 @@ return (${expr});`
             matrixToText(next)
           ]);
           matrixStatus.textContent = "Direct multiply applied.";
-          scrubStartMatrix = getActiveTransformMatrix();
+          scrubStartMatrix = getGlobalTransformMatrix();
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
+        }
+      });
+
+      revertByInverse.addEventListener("click", () => {
+        try {
+          stopInterpolationNow();
+          const inputMatrix = readMatrixFromInputs();
+          if (Math.abs(inputMatrix.determinant()) < 1e-8) {
+            throw new Error("Matrix is not invertible.");
+          }
+          const inverse = inputMatrix.clone();
+          inverse.invert();
+          const inverseRowMajor = getRowMajorFromMatrix(inverse);
+          const entityLabel = getActiveTransformLabel();
+          const current = getGlobalTransformMatrix();
+          const next = current.clone().multiply(inverse);
+          setActiveTransformMatrix(next);
+          addAppliedMatrix(inverseRowMajor, current);
+          showOperationOutput([
+            `${entityLabel}_next = ${entityLabel}_current * inv(M_editor)`,
+            "",
+            `${entityLabel}_current:`,
+            matrixToText(current),
+            "",
+            "inv(M_editor):",
+            matrixToText(inverse),
+            "",
+            `${entityLabel}_next:`,
+            matrixToText(next)
+          ]);
+          matrixStatus.textContent = "Inverse multiply applied (revert).";
+          scrubStartMatrix = getGlobalTransformMatrix();
         } catch (err) {
           matrixStatus.textContent = err instanceof Error ? err.message : "Invalid matrix input.";
         }
@@ -2578,7 +2618,7 @@ return (${expr});`
             setActiveTransformMatrix(inputMatrix);
           }
           renderAppliedMatrices();
-          const finalCurrent = getActiveTransformMatrix();
+          const finalCurrent = getGlobalTransformMatrix();
           showOperationOutput([
             `${entityLabel} = M_editor`,
             "",
@@ -2596,7 +2636,7 @@ return (${expr});`
       });
 
       copyCurrent.addEventListener("click", () => {
-        setInputsFromMatrix(getActiveTransformObject().matrix);
+        setInputsFromMatrix(getGlobalTransformMatrix());
         matrixStatus.textContent = `Target matrix updated from current ${getActiveTransformLabel()} transform.`;
       });
 
@@ -2667,6 +2707,9 @@ return (${expr});`
       resetCube.addEventListener("click", () => {
         stopInterpolationNow();
         const identity = createIdentityMatrix();
+        if (transformEntityMode === "point") {
+          pointBaseMatrix = createIdentityMatrix();
+        }
         setActiveTransformMatrix(identity);
         setInputsFromMatrix(identity);
         const entityLabel = getActiveTransformLabel();
@@ -2683,7 +2726,7 @@ return (${expr});`
         nextAppliedId = 1;
         chainBaseMatrix = createIdentityMatrix();
         renderAppliedMatrices();
-        scrubStartMatrix = getActiveTransformMatrix();
+        scrubStartMatrix = getGlobalTransformMatrix();
       });
 
       appliedMatrixList.addEventListener("click", (event) => {
@@ -2711,7 +2754,7 @@ return (${expr});`
         try {
           preservedEditorMatrix = readMatrixFromInputs();
         } catch {
-          preservedEditorMatrix = getActiveTransformMatrix();
+          preservedEditorMatrix = getGlobalTransformMatrix();
         }
         is2D = !is2D;
         transformViewIs2D = is2D;
@@ -2733,7 +2776,7 @@ return (${expr});`
         stopInterpolationNow();
         transformEntityMode = transformObjectMode.value === "point" ? "point" : "cube";
         syncTransformEntityVisibility();
-        const current = getActiveTransformMatrix();
+        const current = getGlobalTransformMatrix();
         setInputsFromMatrix(current);
         transformEditorMatrix = current.clone();
         resetCube.textContent = transformEntityMode === "point" ? "Reset Point" : "Reset Cube";
@@ -2796,7 +2839,7 @@ return (${expr});`
           matrixStatus.textContent = "Cannot animate: invalid matrix input.";
           return;
         }
-        startMathMulAnimation(getActiveTransformMatrix(), editorMatrix, is2D ? 3 : 4, mathMulManualStep);
+        startMathMulAnimation(getGlobalTransformMatrix(), editorMatrix, is2D ? 3 : 4, mathMulManualStep);
         updateMathVisualizer();
       });
 
