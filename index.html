@@ -851,7 +851,7 @@ y_axis = (0, 1)</pre>
         <div class="matrix-actions">
           <select id="transformObjectMode">
             <option value="cube">Object: Cube</option>
-            <option value="point">Object: Point</option>
+            <option value="point" selected>Object: Point</option>
           </select>
           <button id="copyCurrent" type="button">Copy Current</button>
           <button id="identityTarget" type="button">Identity</button>
@@ -861,6 +861,7 @@ y_axis = (0, 1)</pre>
           <select id="chainStepSelect">
             <option value="">Edit Step: None</option>
           </select>
+          <button id="revertSelectedStep" type="button">Revert Selected</button>
           <button id="chainModeTranslate" type="button">Translate</button>
           <button id="chainModeRotate" type="button">Rotate</button>
           <button id="chainModeScale" type="button">Scale</button>
@@ -1173,6 +1174,7 @@ y_axis = (0, 1)</pre>
       const worldAxisLabelZ = document.getElementById("worldAxisLabelZ");
       const appliedSection = document.getElementById("appliedSection");
       const chainStepSelect = document.getElementById("chainStepSelect");
+      const revertSelectedStep = document.getElementById("revertSelectedStep");
       const chainModeTranslate = document.getElementById("chainModeTranslate");
       const chainModeRotate = document.getElementById("chainModeRotate");
       const chainModeScale = document.getElementById("chainModeScale");
@@ -1188,13 +1190,14 @@ y_axis = (0, 1)</pre>
         setMatrix,
         resetCube,
         replayTransformations,
-        doTransformation
+        doTransformation,
+        revertSelectedStep
       ];
 
       let matrixInputs = [];
       let editorMode = "3d";
       let toolMode = "transform";
-      let transformEntityMode = "cube";
+      let transformEntityMode = "point";
       let transformEditorMatrix = null;
       let vizEditorMatrix = null;
       let transformViewIs2D = true;
@@ -2383,7 +2386,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
       createControls(activeCamera, is2D);
       rebuildMatrixEditor("2d", transformEditorMatrix);
       syncChainControlModeButtons();
-      resetCube.textContent = "Reset Cube";
+      resetCube.textContent = "Reset Point";
       syncTransformEntityVisibility();
       updateCurrentStatePanel();
       renderAppliedMatrices();
@@ -2789,6 +2792,31 @@ return (${expr});`
         const value = chainStepSelect.value;
         selectedAppliedStepIndex = value === "" ? -1 : Number(value);
         syncChainControlAttachment();
+      });
+
+      revertSelectedStep.addEventListener("click", () => {
+        if (selectedAppliedStepIndex < 0 || selectedAppliedStepIndex >= appliedMatrices.length) {
+          matrixStatus.textContent = "Select a matrix step first.";
+          return;
+        }
+        try {
+          const entry = appliedMatrices[selectedAppliedStepIndex];
+          appliedMatrices.splice(selectedAppliedStepIndex, 1);
+          selectedAppliedStepIndex = -1;
+          chainStepSelect.value = "";
+          recomputeFinalFromAppliedChain();
+          renderAppliedMatrices();
+          showOperationOutput([
+            `Revert selected: removed M${entry.id} from applied chain.`,
+            "",
+            "Updated global matrix:",
+            matrixToText(getGlobalTransformMatrix())
+          ]);
+          matrixStatus.textContent = `Removed M${entry.id} from chain.`;
+          scrubStartMatrix = getGlobalTransformMatrix();
+        } catch (err) {
+          matrixStatus.textContent = err instanceof Error ? err.message : "Could not revert selected step.";
+        }
       });
 
       chainModeTranslate.addEventListener("click", () => {
