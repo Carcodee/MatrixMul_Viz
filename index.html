@@ -852,6 +852,7 @@ y_axis = (0, 1)</pre>
           <select id="transformObjectMode">
             <option value="cube">Object: Cube</option>
             <option value="point" selected>Object: Point</option>
+            <option value="space">Object: Space</option>
           </select>
           <button id="copyCurrent" type="button">Copy Current</button>
           <button id="identityTarget" type="button">Identity</button>
@@ -980,20 +981,37 @@ y_axis = (0, 1)</pre>
           controls.enabled = !event.value;
         });
         chainControl.addEventListener("objectChange", () => {
-          if (toolMode !== "transform" || selectedAppliedStepIndex < 0) return;
-          const steps = getAppliedChainData();
-          const step = steps[selectedAppliedStepIndex];
-          if (!step) return;
+          if (toolMode !== "transform") return;
+          if (chainControlTarget === "step") {
+            if (selectedAppliedStepIndex < 0) return;
+            const steps = getAppliedChainData();
+            const step = steps[selectedAppliedStepIndex];
+            if (!step) return;
 
-          chainControlProxy.updateMatrix();
-          const cumulativeNew = chainControlProxy.matrix.clone();
-          const prefixInv = step.prefix.clone();
-          if (Math.abs(prefixInv.determinant()) < 1e-8) return;
-          prefixInv.invert();
-          const localNew = prefixInv.multiply(cumulativeNew);
-          appliedMatrices[selectedAppliedStepIndex].rowMajor = getRowMajorFromMatrix(localNew);
-          recomputeFinalFromAppliedChain();
-          renderAppliedMatrices();
+            chainControlProxy.updateMatrix();
+            const cumulativeNew = chainControlProxy.matrix.clone();
+            const prefixInv = step.prefix.clone();
+            if (Math.abs(prefixInv.determinant()) < 1e-8) return;
+            prefixInv.invert();
+            const localNew = prefixInv.multiply(cumulativeNew);
+            appliedMatrices[selectedAppliedStepIndex].rowMajor = getRowMajorFromMatrix(localNew);
+            recomputeFinalFromAppliedChain();
+            renderAppliedMatrices();
+            setInputsFromMatrix(getGlobalTransformMatrix());
+            return;
+          }
+          if (chainControlTarget === "editor") {
+            editorControlProxy.updateMatrix();
+            const previewWorld = editorControlProxy.matrix.clone();
+            const baseForEditor = getGlobalTransformMatrix();
+            if (Math.abs(baseForEditor.determinant()) < 1e-8) return;
+            const baseInv = baseForEditor.clone().invert();
+            const editorLocal = baseInv.multiply(previewWorld);
+            setInputsFromMatrix(editorLocal);
+            transformEditorMatrix = editorLocal.clone();
+            matrixStatus.textContent = "Editor matrix updated from gizmo.";
+            return;
+          }
         });
         scene.add(chainControl);
         syncChainControlAttachment();
@@ -1014,34 +1032,90 @@ y_axis = (0, 1)</pre>
 
       function syncChainControlAttachment() {
         if (!chainControl) return;
+        chainControlTarget = "none";
         if (chainControlMode === "none") {
           chainControl.detach();
           chainControl.visible = false;
           return;
         }
         chainControl.setMode(chainControlMode);
-        if (toolMode !== "transform" || selectedAppliedStepIndex < 0 || selectedAppliedStepIndex >= appliedMatrices.length) {
+        if (toolMode !== "transform") {
           chainControl.detach();
           chainControl.visible = false;
           return;
         }
-        const steps = getAppliedChainData();
-        const step = steps[selectedAppliedStepIndex];
-        if (!step) {
-          chainControl.detach();
-          chainControl.visible = false;
+        if (selectedAppliedStepIndex >= 0 && selectedAppliedStepIndex < appliedMatrices.length) {
+          const steps = getAppliedChainData();
+          const step = steps[selectedAppliedStepIndex];
+          if (!step) {
+            chainControl.detach();
+            chainControl.visible = false;
+            return;
+          }
+          const pos = new THREE.Vector3();
+          const quat = new THREE.Quaternion();
+          const scl = new THREE.Vector3();
+          step.cumulative.decompose(pos, quat, scl);
+          chainControlProxy.position.copy(pos);
+          chainControlProxy.quaternion.copy(quat);
+          chainControlProxy.scale.copy(scl);
+          chainControlProxy.updateMatrix();
+          chainControl.attach(chainControlProxy);
+          chainControlTarget = "step";
+          chainControl.visible = true;
           return;
         }
+        if (transformEntityMode === "cube" || transformEntityMode === "space" || transformEntityMode === "point") {
+          const editorMatrix = tryReadMatrixFromInputs();
+          if (!editorMatrix) {
+            chainControl.detach();
+            chainControl.visible = false;
+            return;
+          }
+          const pos = new THREE.Vector3();
+          const quat = new THREE.Quaternion();
+          const scl = new THREE.Vector3();
+          const previewWorld = getGlobalTransformMatrix().clone().multiply(editorMatrix);
+          previewWorld.decompose(pos, quat, scl);
+          editorControlProxy.position.copy(pos);
+          editorControlProxy.quaternion.copy(quat);
+          editorControlProxy.scale.copy(scl);
+          editorControlProxy.updateMatrix();
+          chainControl.attach(editorControlProxy);
+          chainControlTarget = "editor";
+          chainControl.visible = true;
+          return;
+        }
+        chainControl.detach();
+        chainControl.visible = false;
+      }
+
+      function syncEditorPreviewGizmo() {
+        if (
+          toolMode !== "transform" ||
+          selectedAppliedStepIndex >= 0
+        ) {
+          editorPreviewGizmo.visible = false;
+          return;
+        }
+        const editorMatrix = tryReadMatrixFromInputs();
+        if (!editorMatrix) {
+          editorPreviewGizmo.visible = false;
+          return;
+        }
+        const previewWorld = getGlobalTransformMatrix().clone().multiply(editorMatrix);
         const pos = new THREE.Vector3();
         const quat = new THREE.Quaternion();
         const scl = new THREE.Vector3();
-        step.cumulative.decompose(pos, quat, scl);
-        chainControlProxy.position.copy(pos);
-        chainControlProxy.quaternion.copy(quat);
-        chainControlProxy.scale.copy(scl);
-        chainControlProxy.updateMatrix();
-        chainControl.attach(chainControlProxy);
-        chainControl.visible = true;
+        previewWorld.decompose(pos, quat, scl);
+        editorPreviewGizmo.position.copy(pos);
+        editorPreviewGizmo.quaternion.copy(quat);
+        editorPreviewGizmo.scale.set(
+          THREE.MathUtils.clamp(Math.abs(scl.x), 0.3, 1.35),
+          THREE.MathUtils.clamp(Math.abs(scl.y), 0.3, 1.35),
+          THREE.MathUtils.clamp(Math.abs(scl.z), 0.3, 1.35)
+        );
+        editorPreviewGizmo.visible = true;
       }
 
       scene.add(new THREE.AxesHelper(8));
@@ -1092,6 +1166,41 @@ y_axis = (0, 1)</pre>
       cube.matrixAutoUpdate = false;
       cube.matrix.identity();
       scene.add(cube);
+
+      function createSpaceLattice(size, divisions, color, opacity) {
+        const points = [];
+        const half = size / 2;
+        const step = size / divisions;
+        for (let i = 0; i <= divisions; i += 1) {
+          const v = -half + i * step;
+          for (let j = 0; j <= divisions; j += 1) {
+            const w = -half + j * step;
+            points.push(-half, v, w, half, v, w);
+            points.push(v, -half, w, v, half, w);
+            points.push(v, w, -half, v, w, half);
+          }
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3));
+        const material = new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity
+        });
+        return new THREE.LineSegments(geometry, material);
+      }
+
+      const space = new THREE.Group();
+      space.matrixAutoUpdate = false;
+      space.matrix.identity();
+      space.add(createSpaceLattice(4, 4, 0x8ec5ff, 0.2));
+      const spaceBounds = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(4, 4, 4)),
+        new THREE.LineBasicMaterial({ color: 0xffcf7a, transparent: true, opacity: 0.52 })
+      );
+      space.add(spaceBounds);
+      space.visible = false;
+      scene.add(space);
 
       const point = new THREE.Mesh(
         new THREE.SphereGeometry(0.18, 18, 18),
@@ -1206,8 +1315,16 @@ y_axis = (0, 1)</pre>
       let chainControl = null;
       const chainControlProxy = new THREE.Object3D();
       scene.add(chainControlProxy);
+      const editorControlProxy = new THREE.Object3D();
+      scene.add(editorControlProxy);
+      const editorPreviewGizmo = new THREE.Group();
+      const editorPreviewAxes = new THREE.AxesHelper(0.9);
+      editorPreviewGizmo.add(editorPreviewAxes);
+      editorPreviewGizmo.visible = false;
+      scene.add(editorPreviewGizmo);
       let selectedAppliedStepIndex = -1;
       let chainControlMode = "none";
+      let chainControlTarget = "none";
       let chainBaseMatrix = new THREE.Matrix4().identity();
       let currentGlobalMatrix = new THREE.Matrix4().identity();
       let pointBaseMatrix = new THREE.Matrix4().identity();
@@ -1350,15 +1467,23 @@ y_axis = (0, 1)</pre>
         for (let i = 0; i < 16; i += 1) {
           matrixInputs[i].value = String(rowMajor4[i]);
         }
+        if (toolMode === "transform") {
+          syncChainControlAttachment();
+          syncEditorPreviewGizmo();
+        }
         updateMathVisualizer();
       }
 
       function getActiveTransformObject() {
-        return transformEntityMode === "point" ? point : cube;
+        if (transformEntityMode === "point") return point;
+        if (transformEntityMode === "space") return space;
+        return cube;
       }
 
       function getActiveTransformLabel() {
-        return transformEntityMode === "point" ? "point" : "cube";
+        if (transformEntityMode === "point") return "point";
+        if (transformEntityMode === "space") return "space";
+        return "cube";
       }
 
       function getActiveTransformMatrix() {
@@ -1373,9 +1498,12 @@ y_axis = (0, 1)</pre>
         currentGlobalMatrix = nextMatrix.clone();
         cube.matrix.copy(currentGlobalMatrix);
         cube.matrixWorldNeedsUpdate = true;
+        space.matrix.copy(currentGlobalMatrix);
+        space.matrixWorldNeedsUpdate = true;
         const pointFinal = pointBaseMatrix.clone().multiply(currentGlobalMatrix);
         point.matrix.copy(pointFinal);
         point.matrixWorldNeedsUpdate = true;
+        syncChainControlAttachment();
         updateCurrentStatePanel();
         updateMathVisualizer();
       }
@@ -1383,11 +1511,31 @@ y_axis = (0, 1)</pre>
       function syncTransformEntityVisibility() {
         if (toolMode === "viz") {
           cube.visible = false;
+          space.visible = false;
           point.visible = false;
           return;
         }
         cube.visible = transformEntityMode === "cube";
+        space.visible = transformEntityMode === "space";
         point.visible = transformEntityMode === "point";
+      }
+
+      function syncWorldGridVisibility() {
+        if (toolMode === "viz") {
+          gridXY.visible = true;
+          gridXZ.visible = false;
+          gridYZ.visible = false;
+          return;
+        }
+        if (transformEntityMode === "space") {
+          gridXY.visible = false;
+          gridXZ.visible = false;
+          gridYZ.visible = false;
+          return;
+        }
+        gridXY.visible = true;
+        gridXZ.visible = !is2D;
+        gridYZ.visible = !is2D;
       }
 
       function formatValue(value) {
@@ -1871,13 +2019,11 @@ y_tip (grid) = (${formatValue(yTipX)}, ${formatValue(yTipY)})`;
         }
         const pointPos = new THREE.Vector3().setFromMatrixPosition(point.matrix);
         const origin = new THREE.Vector3(0, 0, 0);
-        const projected = new THREE.Vector3(pointPos.x, pointPos.y, 0);
 
         pointWorldPath.geometry.setFromPoints([origin, pointPos]);
         pointWorldPath.computeLineDistances();
-        pointWorldProjection.geometry.setFromPoints([pointPos, projected]);
-        pointWorldProjection.computeLineDistances();
-        pointWorldProjectedDot.position.copy(projected);
+        pointWorldProjection.visible = false;
+        pointWorldProjectedDot.visible = false;
         pointWorldVizGroup.visible = true;
 
         setVizLabel(
@@ -2217,9 +2363,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
           if (!vizEditorMatrix) vizEditorMatrix = createIdentityMatrix();
           is2D = true;
           activeCamera = camera2D;
-          gridXY.visible = true;
-          gridXZ.visible = false;
-          gridYZ.visible = false;
+          syncWorldGridVisibility();
           createControls(activeCamera, true);
           modeLabel.textContent = "Mode: 2D";
           modeToggle.textContent = "Switch to 3D";
@@ -2256,9 +2400,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
         is2D = transformViewIs2D;
         const restoreMode = is2D ? "2d" : "3d";
         rebuildMatrixEditor(restoreMode, transformEditorMatrix || getGlobalTransformMatrix());
-        gridXY.visible = true;
-        gridXZ.visible = !is2D;
-        gridYZ.visible = !is2D;
+        syncWorldGridVisibility();
         activeCamera = is2D ? camera2D : camera3D;
         createControls(activeCamera, is2D);
         for (const control of transformControls) control.disabled = false;
@@ -2277,6 +2419,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
           updateMathVisualizer();
           return;
         }
+        syncChainControlAttachment();
         updateMathVisualizer();
       }
 
@@ -2380,9 +2523,7 @@ cumulative T: ${formatVec3(entry.cumulativeTranslation)}</pre>
 
       transformEditorMatrix = createIdentityMatrix();
       vizEditorMatrix = createIdentityMatrix();
-      gridXY.visible = true;
-      gridXZ.visible = !is2D;
-      gridYZ.visible = !is2D;
+      syncWorldGridVisibility();
       createControls(activeCamera, is2D);
       rebuildMatrixEditor("2d", transformEditorMatrix);
       syncChainControlModeButtons();
@@ -2500,7 +2641,9 @@ return (${expr});`
         applyInterpolatedMatrix(done.startMatrix, done.endMatrix, 1);
         interpolation = null;
         matrixStatus.textContent = done.completeMessage || "Interpolation complete.";
-        if (done.historyRowMajor) addAppliedMatrix(done.historyRowMajor, done.startMatrix);
+        if (done.historyRowMajor) {
+          addAppliedMatrix(done.historyRowMajor, done.startMatrix);
+        }
         scrubStartMatrix = getGlobalTransformMatrix();
         showOperationOutput([
           "Edited / Current Chain Result:",
@@ -2763,9 +2906,7 @@ return (${expr});`
         transformViewIs2D = is2D;
         activeCamera = is2D ? camera2D : camera3D;
 
-        gridXY.visible = true;
-        gridXZ.visible = !is2D;
-        gridYZ.visible = !is2D;
+        syncWorldGridVisibility();
         rebuildMatrixEditor(is2D ? "2d" : "3d", preservedEditorMatrix);
         transformEditorMatrix = preservedEditorMatrix.clone();
 
@@ -2777,12 +2918,20 @@ return (${expr});`
       transformObjectMode.addEventListener("change", () => {
         if (toolMode === "viz") return;
         stopInterpolationNow();
-        transformEntityMode = transformObjectMode.value === "point" ? "point" : "cube";
+        const nextMode = transformObjectMode.value;
+        transformEntityMode = nextMode === "space" ? "space" : (nextMode === "point" ? "point" : "cube");
+        if (transformEntityMode === "space" && selectedAppliedStepIndex < 0 && chainControlMode === "none") {
+          chainControlMode = "translate";
+          syncChainControlModeButtons();
+        }
         syncTransformEntityVisibility();
+        syncWorldGridVisibility();
         const current = getGlobalTransformMatrix();
         setInputsFromMatrix(current);
         transformEditorMatrix = current.clone();
-        resetCube.textContent = transformEntityMode === "point" ? "Reset Point" : "Reset Cube";
+        resetCube.textContent = transformEntityMode === "point"
+          ? "Reset Point"
+          : (transformEntityMode === "space" ? "Reset Space" : "Reset Cube");
         matrixStatus.textContent = `Transform object set to ${getActiveTransformLabel()}.`;
         updateCurrentStatePanel();
         syncChainControlAttachment();
@@ -2800,20 +2949,34 @@ return (${expr});`
           return;
         }
         try {
+          stopInterpolationNow();
+          const startMatrix = getGlobalTransformMatrix();
           const entry = appliedMatrices[selectedAppliedStepIndex];
           appliedMatrices.splice(selectedAppliedStepIndex, 1);
           selectedAppliedStepIndex = -1;
           chainStepSelect.value = "";
-          recomputeFinalFromAppliedChain();
+
+          const endMatrix = chainBaseMatrix.clone();
+          for (const applied of appliedMatrices) {
+            endMatrix.multiply(matrixFromRowMajor(applied.rowMajor));
+          }
+
+          interpolation = {
+            startMatrix,
+            endMatrix,
+            startTime: performance.now(),
+            durationMs: INTERP_DURATION_MS,
+            completeMessage: `Removed M${entry.id} from chain.`
+          };
           renderAppliedMatrices();
           showOperationOutput([
             `Revert selected: removed M${entry.id} from applied chain.`,
             "",
             "Updated global matrix:",
-            matrixToText(getGlobalTransformMatrix())
+            matrixToText(endMatrix)
           ]);
-          matrixStatus.textContent = `Removed M${entry.id} from chain.`;
-          scrubStartMatrix = getGlobalTransformMatrix();
+          matrixStatus.textContent = `Animating revert for M${entry.id}...`;
+          scrubStartMatrix = startMatrix.clone();
         } catch (err) {
           matrixStatus.textContent = err instanceof Error ? err.message : "Could not revert selected step.";
         }
@@ -2955,6 +3118,7 @@ return (${expr});`
         updateVizHandleLabels();
         updateWorldAxisLabels();
         updatePointWorldViz();
+        syncEditorPreviewGizmo();
         renderer.render(scene, activeCamera);
         requestAnimationFrame(animate);
       }

@@ -40,7 +40,7 @@ function renderMatrixTable(rowMajor, formatValue) {
 }
 
 export function renderCurrentStatePanel({ entityLabel, translation, rowMajor, formatValue }) {
-  const label = entityLabel === "point" ? "Point" : "Cube";
+  const label = entityLabel === "point" ? "Point" : (entityLabel === "space" ? "Space" : "Cube");
   const tx = escapeHtml(formatValue(translation.x));
   const ty = escapeHtml(formatValue(translation.y));
   const tz = escapeHtml(formatValue(translation.z));
