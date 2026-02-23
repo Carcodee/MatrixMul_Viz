@@ -35,6 +35,18 @@ python -m http.server 8000
 
 Then visit `http://localhost:8000`.
 
+### Run Without Command Line
+
+Double-click one of these files from the project folder:
+
+- Windows: `Run-MatrixMulViz.bat`
+- macOS: `Run-MatrixMulViz.command`
+
+Notes:
+- Both scripts start a local server on `http://localhost:8000`.
+- Keep the script window open while using the app.
+- On macOS, if double-click is blocked the first time, right-click the `.command` file and choose Open.
+
 ## Main UI Areas
 
 ## Top Controls
